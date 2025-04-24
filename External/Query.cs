@@ -350,7 +350,7 @@ class Query
         return (T)command.ExecuteScalar();
     }
 
-    private int Scalar(SqlConnection conn)
+    public int Scalar(SqlConnection conn)
     {
         return Scalar<int>(conn);
     }

@@ -16,4 +16,22 @@ public class Article
     public string Content { get; set; } = string.Empty;
     public string Topic { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+
+    public List<string> ToList() {
+        List<string> fields = [
+            QPiece.toStr(Id),
+            QPiece.toNStr(Title),
+            QPiece.toStr(AuthorId),
+            QPiece.toStr(TimeStamp),
+            QPiece.toNStr(Abstract),
+            QPiece.toNStr(Content),
+            QPiece.toNStr(Topic),
+            QPiece.toStr(Status)
+        ];
+        return fields;
+    }
+    public override string ToString()
+    {
+        return string.Join(", ", ToList());
+    }
 }

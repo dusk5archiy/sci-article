@@ -12,4 +12,21 @@ public class User
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Role { get; set; } = UserRole.Author;
+
+    public List<string> ToList() {
+        List<string> fields = [
+            QPiece.toStr(Id),
+            QPiece.toNStr(Name),
+            QPiece.toStr(Birthday),
+            QPiece.toStr(Email),
+            QPiece.toStr(Username),
+            QPiece.toStr(Password),
+            QPiece.toStr(Role)
+        ];
+        return fields;
+    }
+    public override string ToString()
+    {
+        return string.Join(", ", ToList());
+    }
 }
