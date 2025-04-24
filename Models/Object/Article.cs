@@ -1,10 +1,12 @@
+namespace SciArticle.Models.Object;
+
 class ArticleStatus
 {
     public const string Pending = "Pending";
     public const string Approved = "Approved";
     public const string Rejected = "Rejected";
 }
-class Article
+public class Article
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
