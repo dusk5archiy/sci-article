@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SciArticle.Models.Object;
 class UserRole {
     public const string Admin = "Admin";

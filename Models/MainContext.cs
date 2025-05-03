@@ -20,7 +20,7 @@ public class MainContext : DbContext
         string conn_string = new SqlConnectionStringBuilder
         {
             DataSource = "PC",
-            InitialCatalog = "DbDemo",
+            InitialCatalog = "DbDotnet",
             IntegratedSecurity = true,
             TrustServerCertificate = true,
             ConnectTimeout = 60,
@@ -30,7 +30,6 @@ public class MainContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Khai báo "HasNoKey" để loại bỏ tính năng kiểm soát khóa chính
         modelBuilder.Entity<Article>().HasNoKey();
         modelBuilder.Entity<User>().HasNoKey();
         modelBuilder.Entity<IdCounter>().HasNoKey();

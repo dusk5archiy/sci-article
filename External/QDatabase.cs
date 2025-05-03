@@ -10,7 +10,7 @@ sealed class QDatabase
 
     public static void Init(string server_name, string database_name)
     {
-        QDatabase.server_only_conn_string = new SqlConnectionStringBuilder
+        server_only_conn_string = new SqlConnectionStringBuilder
         {
             DataSource = server_name,
             IntegratedSecurity = true,
@@ -19,7 +19,7 @@ sealed class QDatabase
             MultipleActiveResultSets = true,
         }.ConnectionString;
 
-        QDatabase.default_conn_string = new SqlConnectionStringBuilder
+        default_conn_string = new SqlConnectionStringBuilder
         {
             DataSource = server_name,
             InitialCatalog = database_name,

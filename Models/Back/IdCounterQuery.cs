@@ -1,5 +1,7 @@
 using Microsoft.Data.SqlClient;
 
+namespace SciArticle.Models.Back;
+
 static class IdCounterQuery
 {
     public static int GetIdThenIncrement(SqlConnection conn, string table)

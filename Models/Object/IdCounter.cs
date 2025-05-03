@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SciArticle.Models.Object;
 public class IdCounter
 {
