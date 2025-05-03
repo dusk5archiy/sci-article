@@ -68,6 +68,13 @@ public class AccountController : Controller
 
         _logger.LogInformation("User {Username} logged in at {Time}", user.Username, DateTime.UtcNow);
 
+        // Check if the user is an author and redirect to the author dashboard
+        if (user.Role == UserRole.Author)
+        {
+            return RedirectToAction("Dashboard", "Author");
+        }
+
+        // Otherwise use the returnUrl or default to the home page
         return LocalRedirect(returnUrl ?? Url.Content("~/"));
     }
 
@@ -119,6 +126,7 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity));
 
-        return RedirectToAction("Index", "Home");
+        // Since we're only creating author accounts, directly redirect to author dashboard
+        return RedirectToAction("Dashboard", "Author");
     }
 }
