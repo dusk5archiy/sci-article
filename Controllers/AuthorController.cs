@@ -146,7 +146,7 @@ public class AuthorController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(ArticleEditViewModel model)
+    public IActionResult Edit(ArticleEditViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -175,16 +175,11 @@ public class AuthorController : Controller
             return RedirectToAction(nameof(Dashboard));
         }
 
-        // Update the article
-        article.Title = model.Title;
-        article.Abstract = model.Abstract;
-        article.Content = model.Content;
-        article.Topic = model.Topic;
-
-        await _context.SaveChangesAsync();
+        // Update the article using ArticleQuery
+        ArticleQuery.EditArticle(model);
 
         _logger.LogInformation("Article {Id} updated by {Username} at {Time}", 
-            article.Id, user.Username, DateTime.Now);
+            model.Id, user.Username, DateTime.Now);
 
         return RedirectToAction(nameof(Dashboard));
     }

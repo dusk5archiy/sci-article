@@ -1,0 +1,176 @@
+@model SciArticle.Models.Front.Admin.AdminDashboardViewModel
+@using SciArticle.Models.Object
+
+@{
+    ViewData["Title"] = "Bảng điều khiển quản trị";
+}
+
+<div class="container my-4">
+    <!-- Display success or error messages if they exist -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Xin chào, @Model.AdminName</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between">
+                <h4>Tất cả bài báo</h4>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @(Model.StatusFilter == "All" ? "Tất cả trạng thái" : GetStatusText(Model.StatusFilter))
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item @(Model.StatusFilter == "All" ? "active" : "")" asp-action="Dashboard" asp-route-statusFilter="All">Tất cả trạng thái</a></li>
+                            <li><a class="dropdown-item @(Model.StatusFilter == ArticleStatus.Pending ? "active" : "")" asp-action="Dashboard" asp-route-statusFilter="@ArticleStatus.Pending">Đang chờ</a></li>
+                            <li><a class="dropdown-item @(Model.StatusFilter == ArticleStatus.Approved ? "active" : "")" asp-action="Dashboard" asp-route-statusFilter="@ArticleStatus.Approved">Đã duyệt</a></li>
+                            <li><a class="dropdown-item @(Model.StatusFilter == ArticleStatus.Rejected ? "active" : "")" asp-action="Dashboard" asp-route-statusFilter="@ArticleStatus.Rejected">Từ chối</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Articles.Any())
+            {
+                <div class="text-center p-4">
+                    <p class="text-muted">Không có bài báo nào.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tiêu đề</th>
+                                <th>Tác giả</th>
+                                <th>Chủ đề</th>
+                                <th>Ngày</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var article in Model.Articles)
+                            {
+                                <tr>
+                                    <td>@article.Title</td>
+                                    <td>@article.AuthorName</td>
+                                    <td>@article.Topic</td>
+                                    <td>@article.TimeStamp.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <span class="badge @GetStatusClass(article.Status)">@GetStatusText(article.Status)</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-controller="Admin" asp-action="Details" asp-route-id="@article.Id" asp-route-page="@Model.Pagination.CurrentPage" asp-route-statusFilter="@Model.StatusFilter" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-eye"></i> Xem
+                                            </a>
+                                            @if (article.IsPending)
+                                            {
+                                                <form asp-controller="Admin" asp-action="ApproveArticle" asp-route-id="@article.Id" asp-route-page="@Model.Pagination.CurrentPage" asp-route-statusFilter="@Model.StatusFilter" method="post">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                                        <i class="bi bi-check-circle"></i> Phê duyệt
+                                                    </button>
+                                                </form>
+                                                <form asp-controller="Admin" asp-action="RejectArticle" asp-route-id="@article.Id" asp-route-page="@Model.Pagination.CurrentPage" asp-route-statusFilter="@Model.StatusFilter" method="post">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-x-circle"></i> Từ chối
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Model.Pagination.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    @if (Model.Pagination.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Admin" asp-action="Dashboard" asp-route-page="1" asp-route-statusFilter="@Model.StatusFilter" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Admin" asp-action="Dashboard" asp-route-page="@(Model.Pagination.CurrentPage - 1)" asp-route-statusFilter="@Model.StatusFilter" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, Model.Pagination.CurrentPage - 2); i <= Math.Min(Model.Pagination.TotalPages, Model.Pagination.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.Pagination.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-controller="Admin" asp-action="Dashboard" asp-route-page="@i" asp-route-statusFilter="@Model.StatusFilter">@i</a>
+                        </li>
+                    }
+
+                    @if (Model.Pagination.CurrentPage < Model.Pagination.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Admin" asp-action="Dashboard" asp-route-page="@(Model.Pagination.CurrentPage + 1)" asp-route-statusFilter="@Model.StatusFilter" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Admin" asp-action="Dashboard" asp-route-page="@Model.Pagination.TotalPages" asp-route-statusFilter="@Model.StatusFilter" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+@functions {
+    public string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            ArticleStatus.Pending => "bg-warning text-dark",
+            ArticleStatus.Approved => "bg-success",
+            ArticleStatus.Rejected => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+    
+    public string GetStatusText(string status)
+    {
+        return status switch
+        {
+            ArticleStatus.Pending => "Đang chờ",
+            ArticleStatus.Approved => "Đã duyệt",
+            ArticleStatus.Rejected => "Từ chối",
+            _ => "Không xác định"
+        };
+    }
+}

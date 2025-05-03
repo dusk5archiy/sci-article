@@ -5,7 +5,8 @@ using SciArticle.Models.Object;
 
 namespace SciArticle.Models.Back;
 
-public static class ArticleQuery {
+public static class ArticleQuery
+{
     public static void CancelArticle(int id)
     {
         Query q2 = new(Tbl.Article);
@@ -40,5 +41,35 @@ public static class ArticleQuery {
         }
         QDatabase.Exec(func);
         return article;
+    }
+
+    public static void EditArticle(ArticleEditViewModel form)
+    {
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__Id, form.Id);
+
+        // Set the updated fields
+        q.Set(Field.Article__Title, form.Title);
+        q.Set(Field.Article__Abstract, form.Abstract);
+        q.Set(Field.Article__Content, form.Content);
+        q.Set(Field.Article__Topic, form.Topic);
+
+        QDatabase.Exec(q.Update);
+    }
+
+    public static void ApproveArticle(int id)
+    {
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__Id, id);
+        q.Set(Field.Article__Status, ArticleStatus.Approved);
+        QDatabase.Exec(q.Update);
+    }
+
+    public static void RejectArticle(int id)
+    {
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__Id, id);
+        q.Set(Field.Article__Status, ArticleStatus.Rejected);
+        QDatabase.Exec(q.Update);
     }
 }
