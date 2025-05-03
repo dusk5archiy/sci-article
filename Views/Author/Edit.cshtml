@@ -1,7 +1,7 @@
 @model SciArticle.Models.Front.User.ArticleEditViewModel
 
 @{
-    ViewData["Title"] = "Edit Article";
+    ViewData["Title"] = "Sửa bài báo";
 }
 
 <div class="container my-4">
@@ -13,36 +13,36 @@
         <input type="hidden" asp-for="Id" />
 
         <div class="mb-3">
-            <label asp-for="Title" class="form-label">Title</label>
+            <label asp-for="Title" class="form-label">Tiêu đề</label>
             <input asp-for="Title" class="form-control" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Topic" class="form-label">Topic/Category</label>
-            <input asp-for="Topic" class="form-control" placeholder="Enter a topic or category" />
+            <label asp-for="Topic" class="form-label">Chủ đề/Danh mục</label>
+            <input asp-for="Topic" class="form-control" placeholder="Nhập chủ đề hoặc danh mục" />
             <span asp-validation-for="Topic" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Abstract" class="form-label">Abstract</label>
+            <label asp-for="Abstract" class="form-label">Tóm tắt</label>
             <textarea asp-for="Abstract" class="form-control" rows="3"></textarea>
             <span asp-validation-for="Abstract" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Content" class="form-label">Content</label>
+            <label asp-for="Content" class="form-label">Nội dung</label>
             <textarea asp-for="Content" class="form-control" rows="15"></textarea>
             <span asp-validation-for="Content" class="text-danger"></span>
         </div>
 
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> This article is still pending review. You can update it before it's reviewed.
+            <i class="bi bi-info-circle"></i> Bài báo này vẫn đang chờ xét duyệt. Bạn có thể cập nhật nó trước khi nó được xem xét.
         </div>
 
         <div class="d-flex justify-content-between">
-            <a asp-action="Dashboard" class="btn btn-outline-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary me-2">Quay lại</a>
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
         </div>
     </form>
 </div>

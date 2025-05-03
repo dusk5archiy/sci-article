@@ -1,7 +1,7 @@
 @model SciArticle.Models.Front.User.ArticleEditViewModel
 
 @{
-    ViewData["Title"] = "Create New Article";
+    ViewData["Title"] = "Tạo bài báo mới";
 }
 
 <div class="container my-4">
@@ -12,32 +12,32 @@
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
         <div class="mb-3">
-            <label asp-for="Title" class="form-label">Title</label>
+            <label asp-for="Title" class="form-label">Tiêu đề</label>
             <input asp-for="Title" class="form-control" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Topic" class="form-label">Topic/Category</label>
-            <input asp-for="Topic" class="form-control" placeholder="Enter a topic or category" />
+            <label asp-for="Topic" class="form-label">Chủ đề/Danh mục</label>
+            <input asp-for="Topic" class="form-control" placeholder="Nhập chủ đề hoặc danh mục" />
             <span asp-validation-for="Topic" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Abstract" class="form-label">Abstract</label>
-            <textarea asp-for="Abstract" class="form-control" rows="3" placeholder="Brief summary of your article"></textarea>
+            <label asp-for="Abstract" class="form-label">Tóm tắt</label>
+            <textarea asp-for="Abstract" class="form-control" rows="3" placeholder="Tóm tắt ngắn gọn về bài báo của bạn"></textarea>
             <span asp-validation-for="Abstract" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Content" class="form-label">Content</label>
-            <textarea asp-for="Content" class="form-control" rows="15" placeholder="Full content of your article"></textarea>
+            <label asp-for="Content" class="form-label">Nội dung</label>
+            <textarea asp-for="Content" class="form-control" rows="15" placeholder="Nội dung đầy đủ của bài báo của bạn"></textarea>
             <span asp-validation-for="Content" class="text-danger"></span>
         </div>
 
         <div class="d-flex justify-content-between">
-            <a asp-action="Dashboard" class="btn btn-outline-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Submit Article</button>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary">Hủy bỏ</a>
+            <button type="submit" class="btn btn-primary">Gửi bài báo</button>
         </div>
     </form>
 </div>

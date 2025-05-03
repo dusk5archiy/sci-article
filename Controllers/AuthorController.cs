@@ -127,7 +127,7 @@ public class AuthorController : Controller
         // Check if article can be edited
         if (article.Status != ArticleStatus.Pending)
         {
-            TempData["ErrorMessage"] = "This article cannot be edited because it has already been reviewed.";
+            TempData["ErrorMessage"] = "Bài báo này không thể được chỉnh sửa vì đã được xem xét.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -171,7 +171,7 @@ public class AuthorController : Controller
         // Check if article can be edited
         if (article.Status != ArticleStatus.Pending)
         {
-            TempData["ErrorMessage"] = "This article cannot be edited because it has already been reviewed.";
+            TempData["ErrorMessage"] = "Bài báo này không thể được chỉnh sửa vì đã được xem xét.";
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -243,7 +243,7 @@ public class AuthorController : Controller
 
         if (article.Status != ArticleStatus.Pending)
         {
-            TempData["ErrorMessage"] = "This article cannot be canceled because it has already been reviewed.";
+            TempData["ErrorMessage"] = "Bài báo này không thể bị hủy vì đã được xem xét.";
             return RedirectToAction(nameof(Dashboard), new { page });
         }
 
@@ -251,7 +251,7 @@ public class AuthorController : Controller
         _logger.LogInformation("Article {Id} canceled by {Username} at {Time}", 
             article.Id, user.Username, DateTime.Now);
         
-        TempData["SuccessMessage"] = "Your article has been successfully canceled.";
+        TempData["SuccessMessage"] = "Bài báo của bạn đã được hủy thành công.";
         
         // Get total number of articles after deletion
         int totalArticles = _context.Article.Count(a => a.AuthorId == user.Id);

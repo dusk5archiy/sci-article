@@ -2,7 +2,7 @@
 @using SciArticle.Models.Object
 
 @{
-    ViewData["Title"] = "Author Dashboard";
+    ViewData["Title"] = "Bảng điều khiển tác giả";
 }
 
 <div class="container my-4">
@@ -23,21 +23,21 @@
     }
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Welcome, @Model.AuthorName</h1>
+        <h1>Xin chào, @Model.AuthorName</h1>
         <a asp-controller="Author" asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus"></i> Create New Article
+            <i class="bi bi-plus"></i> Tạo bài báo mới
         </a>
     </div>
 
     <div class="card">
         <div class="card-header bg-light">
-            <h4>Your Articles</h4>
+            <h4>Bài báo của bạn</h4>
         </div>
         <div class="card-body p-0">
             @if (!Model.Articles.Any())
             {
                 <div class="text-center p-4">
-                    <p class="text-muted">You haven't created any articles yet.</p>
+                    <p class="text-muted">Bạn chưa tạo bài báo nào.</p>
                 </div>
             }
             else
@@ -46,11 +46,11 @@
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Title</th>
-                                <th>Topic</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>Tiêu đề</th>
+                                <th>Chủ đề</th>
+                                <th>Ngày</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,22 +61,22 @@
                                     <td>@article.Topic</td>
                                     <td>@article.TimeStamp.ToString("yyyy-MM-dd")</td>
                                     <td>
-                                        <span class="badge @GetStatusClass(article.Status)">@article.Status</span>
+                                        <span class="badge @GetStatusClass(article.Status)">@GetStatusText(article.Status)</span>
                                     </td>
                                     <td>
                                         <div class="btn-group">
                                             <a asp-controller="Author" asp-action="Details" asp-route-id="@article.Id" asp-route-page="@Model.Pagination.CurrentPage" class="btn btn-sm btn-outline-secondary">
-                                                <i class="bi bi-eye"></i> View
+                                                <i class="bi bi-eye"></i> Xem
                                             </a>
                                             @if (article.CanEdit)
                                             {
                                                 <a asp-controller="Author" asp-action="Edit" asp-route-id="@article.Id" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-pencil"></i> Edit
+                                                    <i class="bi bi-pencil"></i> Sửa
                                                 </a>
                                                 <form asp-controller="Author" asp-action="Cancel" asp-route-id="@article.Id" asp-route-page="@Model.Pagination.CurrentPage" method="post" 
-                                                    onsubmit="return confirm('Are you sure you want to cancel this article? This action cannot be undone.');">
+                                                    onsubmit="return confirm('Bạn có chắc chắn muốn hủy bài báo này? Hành động này không thể hoàn tác.');">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                        <i class="bi bi-x-circle"></i> Hủy
                                                     </button>
                                                 </form>
                                             }
@@ -145,6 +145,17 @@
             ArticleStatus.Approved => "bg-success",
             ArticleStatus.Rejected => "bg-danger",
             _ => "bg-secondary"
+        };
+    }
+    
+    public string GetStatusText(string status)
+    {
+        return status switch
+        {
+            ArticleStatus.Pending => "Đang chờ",
+            ArticleStatus.Approved => "Đã duyệt",
+            ArticleStatus.Rejected => "Từ chối",
+            _ => "Không xác định"
         };
     }
 }

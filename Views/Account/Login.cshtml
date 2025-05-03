@@ -1,7 +1,7 @@
 @model SciArticle.Models.Front.User.LoginViewModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Đăng nhập";
 }
 
 <div class="row">
@@ -12,22 +12,22 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-floating mb-3">
                     <input asp-for="Username" class="form-control" autocomplete="username" />
-                    <label asp-for="Username"></label>
+                    <label asp-for="Username">Tên đăng nhập</label>
                     <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
                     <input asp-for="Password" class="form-control" autocomplete="current-password" />
-                    <label asp-for="Password"></label>
+                    <label asp-for="Password">Mật khẩu</label>
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
                 <div class="checkbox mb-3">
                     <label>
                         <input asp-for="RememberMe" />
-                        @Html.DisplayNameFor(m => m.RememberMe)
+                        Ghi nhớ đăng nhập
                     </label>
                 </div>
                 <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Đăng nhập</button>
                 </div>
             </form>
         </section>
