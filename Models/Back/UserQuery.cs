@@ -36,12 +36,7 @@ public static class UserQuery
 
         Query q = new(Tbl.User);
         q.Where(Field.User__Username, username);
-        void func(SqlConnection conn)
-        {
-            q.Select(conn, reader => user = QDataReader.getDataObj<User>(reader));
-        }
-
-        QDatabase.Exec(func);
+        QDatabase.Exec(conn => q.Select(conn, reader => user = QDataReader.getDataObj<User>(reader)));
         return user;
     }
 

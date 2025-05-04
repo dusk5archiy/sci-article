@@ -13,11 +13,8 @@ namespace SciArticle.Controllers;
 
 public class AccountController : Controller
 {
-    private readonly ILogger<AccountController> _logger;
-
-    public AccountController(ILogger<AccountController> logger, MainContext context)
+    public AccountController()
     {
-        _logger = logger;
     }
 
     [HttpGet]
@@ -31,7 +28,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null!)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -65,7 +62,6 @@ public class AccountController : Controller
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        // Check if the user is an author and redirect to the author dashboard
         if (user.Role == UserRole.Author)
         {
             return RedirectToAction("Dashboard", "Author");
@@ -75,7 +71,6 @@ public class AccountController : Controller
             return RedirectToAction("Dashboard", "Admin");
         }
 
-        // Otherwise use the returnUrl or default to the home page
         return LocalRedirect(returnUrl ?? Url.Content("~/"));
     }
 
@@ -86,13 +81,13 @@ public class AccountController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
     }
-    
+
     [HttpGet]
     public IActionResult Register()
     {
         return View();
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
@@ -106,7 +101,7 @@ public class AccountController : Controller
             ModelState.AddModelError("Username", "Username is already taken.");
             return View(model);
         }
-        
+
         if (UserQuery.EmailExists(model.Email))
         {
             ModelState.AddModelError("Email", "Email is already registered.");
@@ -129,7 +124,6 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity));
 
-        // Since we're only creating author accounts, directly redirect to author dashboard
         return RedirectToAction("Dashboard", "Author");
     }
 }

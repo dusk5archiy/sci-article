@@ -17,7 +17,7 @@ public class ArticleEditViewModel
     public string Abstract { get; set; } = string.Empty;
     
     [Required(ErrorMessage = "Nội dung là bắt buộc.")]
-    [StringLength(10000, ErrorMessage = "{0} phải có độ dài từ {2} đến {1} kí tự.", MinimumLength = 50)]
+    // [StringLength(10000, ErrorMessage = "{0} phải có độ dài từ {2} đến {1} kí tự.", MinimumLength = 50)]
     [Display(Name = "Nội dung")]
     public string Content { get; set; } = string.Empty;
     

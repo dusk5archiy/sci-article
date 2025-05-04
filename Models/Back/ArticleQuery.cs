@@ -46,10 +46,10 @@ public static class ArticleQuery
         q.Where(Field.Article__Id, form.Id);
 
         // Set the updated fields
-        q.Set(Field.Article__Title, form.Title);
-        q.Set(Field.Article__Abstract, form.Abstract);
-        q.Set(Field.Article__Content, form.Content);
-        q.Set(Field.Article__Topic, form.Topic);
+        q.SetNString(Field.Article__Title, form.Title);
+        q.SetNString(Field.Article__Abstract, form.Abstract);
+        q.SetNString(Field.Article__Content, form.Content);
+        q.SetNString(Field.Article__Topic, form.Topic);
 
         QDatabase.Exec(q.Update);
     }
@@ -96,9 +96,9 @@ public static class ArticleQuery
         return count;
     }
 
-    public static Article GetArticleById(int id)
+    public static Article? GetArticleById(int id)
     {
-        Article article = new();
+        Article? article = null;
 
         void func(SqlConnection conn)
         {

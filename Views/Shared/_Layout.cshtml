@@ -50,7 +50,7 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-dark">Xin chào, @User.Identity.Name!</span>
+                                <span class="nav-link text-dark">Xin chào, @await Component.InvokeAsync("UserFullName")!</span>
                             </li>
                             <li class="nav-item">
                                 <form method="post" asp-controller="Account" asp-action="Logout">

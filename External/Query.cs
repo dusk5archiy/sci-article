@@ -214,6 +214,11 @@ class Query
         SetClause($"{QPiece.dot(field, alias_)} = '{value}'");
     }
 
+    public void SetNString(string field, string value, string? alias_ = null)
+    {
+        SetClause($"{QPiece.dot(field, alias_)} = N'{value}'");
+    }
+
     public void Set(string field, DateOnly value, string? alias_ = null)
     {
         SetClause($"{QPiece.dot(field, alias_)} = {QPiece.toStr(value)}");

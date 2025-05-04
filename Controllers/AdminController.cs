@@ -12,17 +12,12 @@ namespace SciArticle.Controllers;
 [Authorize(Roles = UserRole.Admin)]
 public class AdminController : Controller
 {
-    private readonly ILogger<AdminController> _logger;
-    private readonly MainContext _context; // Keep for backward compatibility
     private const int ItemsPerPage = 10;
 
-    public AdminController(ILogger<AdminController> logger, MainContext context)
+    public AdminController()
     {
-        _logger = logger;
-        _context = context;
     }
 
-    // Helper method to get the current authenticated admin user
     private User? GetCurrentAdmin()
     {
         string username = User.Identity?.Name ?? string.Empty;
@@ -34,14 +29,13 @@ public class AdminController : Controller
         var admin = GetCurrentAdmin();
 
         int totalItems = ArticleQuery.GetArticleCountByStatus(statusFilter);
-        
+
         page = Math.Max(1, page);
         var articles = ArticleQuery.GetArticlesByStatus(statusFilter, page, ItemsPerPage);
-        
-        // Get the authors for these articles
+
         var authorIds = articles.Select(a => a.AuthorId).Distinct().ToList();
         var authors = new Dictionary<int, string>();
-        
+
         foreach (var authorId in authorIds)
         {
             var author = UserQuery.GetUserById(authorId);
@@ -50,7 +44,7 @@ public class AdminController : Controller
                 authors[authorId] = author.Name;
             }
         }
-        
+
         var articleViewModels = articles
             .Select(a => new AdminArticleViewModel
             {
@@ -63,7 +57,7 @@ public class AdminController : Controller
                 Status = a.Status,
             })
             .ToList();
-            
+
         var viewModel = new AdminDashboardViewModel
         {
             AdminName = admin?.Name ?? "Admin",
@@ -85,15 +79,11 @@ public class AdminController : Controller
     public IActionResult ApproveArticle(int id, int page = 1, string statusFilter = "All")
     {
         var admin = GetCurrentAdmin();
-
-        // Get the article to verify it exists
         var article = ArticleQuery.GetArticleById(id);
         if (article == null)
         {
             return NotFound();
         }
-
-        // Use ArticleQuery to update the article status
         ArticleQuery.ApproveArticle(id);
         TempData["SuccessMessage"] = "Bài báo đã được phê duyệt thành công.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
@@ -151,7 +141,7 @@ public class AdminController : Controller
 
         return View(viewModel);
     }
-    
+
     public IActionResult Statistics(
         int page = 1,
         int topicPage = 1,
@@ -190,13 +180,13 @@ public class AdminController : Controller
         {
             // Ensure page is at least 1
             page = Math.Max(1, page);
-            
+
             // Get total count of authors with articles
             int totalAuthors = ArticleQuery.GetAuthorWithArticlesCount();
-            
+
             // Get author statistics with pagination
             var authorStats = ArticleQuery.GetAuthorArticleStatistics(page, ItemsPerPage, sortBy, sortOrder);
-            
+
             // Set values in view model
             viewModel.AuthorArticleCounts = authorStats;
             viewModel.Pagination = new PaginationInfo
@@ -212,13 +202,13 @@ public class AdminController : Controller
         {
             // Ensure page is at least 1
             topicPage = Math.Max(1, topicPage);
-            
+
             // Get total count of topics
             int totalTopics = ArticleQuery.GetTopicCount();
-            
+
             // Get topic statistics with pagination
             var topicStats = ArticleQuery.GetTopicArticleStatistics(topicPage, ItemsPerPage, topicSortBy, topicSortOrder);
-            
+
             // Set values in view model
             viewModel.TopicArticleCounts = topicStats;
             viewModel.TopicPagination = new PaginationInfo
