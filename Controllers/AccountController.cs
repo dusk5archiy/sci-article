@@ -7,18 +7,17 @@ using SciArticle.Models.Object;
 using SciArticle.Models.Utilities;
 using SciArticle.Models.Back;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SciArticle.Controllers;
 
 public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
-    private readonly MainContext _context;
 
     public AccountController(ILogger<AccountController> logger, MainContext context)
     {
         _logger = logger;
-        _context = context;
     }
 
     [HttpGet]
@@ -38,7 +37,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var user = _context.User.FirstOrDefault(u => u.Username == model.Username);
+        var user = UserQuery.GetUserByUsername(model.Username);
         if (user == null || !PasswordHasher.VerifyPassword(model.Password, user.Password))
         {
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
@@ -79,6 +78,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -99,12 +99,13 @@ public class AccountController : Controller
             return View(model);
         }
 
-        if (_context.User.Any(u => u.Username == model.Username))
+        if (UserQuery.UsernameExists(model.Username))
         {
             ModelState.AddModelError("Username", "Username is already taken.");
             return View(model);
         }
-        if (_context.User.Any(u => u.Email == model.Email))
+        
+        if (UserQuery.EmailExists(model.Email))
         {
             ModelState.AddModelError("Email", "Email is already registered.");
             return View(model);

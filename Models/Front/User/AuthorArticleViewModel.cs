@@ -9,7 +9,5 @@ public class AuthorArticleViewModel
     public DateOnly TimeStamp { get; set; }
     public string Topic { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
-    
-    // This property is used to determine if the edit button should be shown
     public bool CanEdit => Status == ArticleStatus.Pending;
 }

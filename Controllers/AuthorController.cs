@@ -13,13 +13,11 @@ namespace SciArticle.Controllers;
 public class AuthorController : Controller
 {
     private readonly ILogger<AuthorController> _logger;
-    private readonly MainContext _context;
     private const int ItemsPerPage = 10;
 
     public AuthorController(ILogger<AuthorController> logger, MainContext context)
     {
         _logger = logger;
-        _context = context;
     }
 
     public IActionResult Dashboard(int page = 1)
@@ -27,42 +25,37 @@ public class AuthorController : Controller
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
         
-        // Find the user by username
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        // Find the user by username using our query pattern
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the total count of articles for this author
-        int totalItems = _context.Article.Count(a => a.AuthorId == user.Id);
+        int totalItems = ArticleQuery.GetArticleCountByAuthor(user.Id);
         
         // Calculate pagination values
         page = Math.Max(1, page); // Ensure page is at least 1
-        int skip = (page - 1) * ItemsPerPage;
         
         // Get the articles for this author with pagination
-        // Changed from OrderByDescending(a => a.TimeStamp) to OrderByDescending(a => a.Id)
-        var articles = _context.Article
-            .Where(a => a.AuthorId == user.Id)
-            .OrderByDescending(a => a.Id)
-            .Skip(skip)
-            .Take(ItemsPerPage)
-            .Select(a => new AuthorArticleViewModel
-            {
-                Id = a.Id,
-                Title = a.Title,
-                TimeStamp = a.TimeStamp,
-                Topic = a.Topic,
-                Status = a.Status
-            })
-            .ToList();
+        var articles = ArticleQuery.GetArticlesByAuthor(user.Id, page, ItemsPerPage);
+        
+        // Map to view models
+        var articleViewModels = articles.Select(a => new AuthorArticleViewModel
+        {
+            Id = a.Id,
+            Title = a.Title,
+            TimeStamp = a.TimeStamp,
+            Topic = a.Topic,
+            Status = a.Status
+        }).ToList();
 
         // Create the view model
         var viewModel = new AuthorDashboardViewModel
         {
             AuthorName = user.Name,
-            Articles = articles,
+            Articles = articleViewModels,
             Pagination = new PaginationInfo
             {
                 CurrentPage = page,
@@ -91,7 +84,7 @@ public class AuthorController : Controller
 
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
@@ -111,15 +104,15 @@ public class AuthorController : Controller
     {
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article
-        var article = _context.Article.FirstOrDefault(a => a.Id == id && a.AuthorId == user.Id);
-        if (article == null)
+        var article = ArticleQuery.GetArticleById(id);
+        if (article == null || article.AuthorId != user.Id)
         {
             return NotFound();
         }
@@ -155,15 +148,15 @@ public class AuthorController : Controller
 
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article
-        var article = _context.Article.FirstOrDefault(a => a.Id == model.Id && a.AuthorId == user.Id);
-        if (article == null)
+        var article = ArticleQuery.GetArticleById(model.Id);
+        if (article == null || article.AuthorId != user.Id)
         {
             return NotFound();
         }
@@ -188,15 +181,15 @@ public class AuthorController : Controller
     {
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article
-        var article = _context.Article.FirstOrDefault(a => a.Id == id && a.AuthorId == user.Id);
-        if (article == null)
+        var article = ArticleQuery.GetArticleById(id);
+        if (article == null || article.AuthorId != user.Id)
         {
             return NotFound();
         }
@@ -223,15 +216,15 @@ public class AuthorController : Controller
     {
         // Get the current user's username
         string username = User.Identity?.Name ?? string.Empty;
-        var user = _context.User.FirstOrDefault(u => u.Username == username);
+        var user = UserQuery.GetUserByUsername(username);
         if (user == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article
-        var article = _context.Article.FirstOrDefault(a => a.Id == id && a.AuthorId == user.Id);
-        if (article == null)
+        var article = ArticleQuery.GetArticleById(id);
+        if (article == null || article.AuthorId != user.Id)
         {
             return NotFound();
         }
@@ -249,7 +242,7 @@ public class AuthorController : Controller
         TempData["SuccessMessage"] = "Bài báo của bạn đã được hủy thành công.";
         
         // Get total number of articles after deletion
-        int totalArticles = _context.Article.Count(a => a.AuthorId == user.Id);
+        int totalArticles = ArticleQuery.GetArticleCountByAuthor(user.Id);
         int totalPages = (int)Math.Ceiling((double)totalArticles / ItemsPerPage);
         
         // If current page exceeds total pages after deletion, go to last available page

@@ -356,6 +356,11 @@ class Query
         return Scalar<int>(conn);
     }
 
+    public int Count(SqlConnection conn){
+        Output(QPiece.countAll);
+        return Scalar(conn);
+    }
+
     // ------------------------------------------------------------------------
     public void Delete(SqlConnection conn) => QDatabase.ExecQuery(conn, DeleteQuery());
 
@@ -383,12 +388,6 @@ class Query
         where T : DataObj, new()
     {
         Insert(conn, string.Join(", ", obj.ToList()));
-    }
-
-    public int Count(SqlConnection conn)
-    {
-        Output(QPiece.countAll);
-        return Scalar(conn);
     }
 
     // ------------------------------------------------------------------------

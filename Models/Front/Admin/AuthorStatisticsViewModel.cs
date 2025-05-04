@@ -5,7 +5,7 @@ namespace SciArticle.Models.Front.Admin;
 public class AuthorStatisticsViewModel
 {
     public string AdminName { get; set; } = string.Empty;
-    public List<AuthorArticleCountViewModel> AuthorArticleCounts { get; set; } = new List<AuthorArticleCountViewModel>();
+    public List<AuthorArticleCountViewModel> AuthorArticleCounts { get; set; } = [];
     public PaginationInfo Pagination { get; set; } = new PaginationInfo();
     
     // Statistics by Status
@@ -15,7 +15,7 @@ public class AuthorStatisticsViewModel
     public int RejectedArticles { get; set; }
     
     // Statistics by Topic
-    public List<TopicArticleCountViewModel> TopicArticleCounts { get; set; } = new List<TopicArticleCountViewModel>();
+    public List<TopicArticleCountViewModel> TopicArticleCounts { get; set; } = [];
     public PaginationInfo TopicPagination { get; set; } = new PaginationInfo();
     public string CurrentView { get; set; } = "authors"; // Can be "authors" or "topics"
     

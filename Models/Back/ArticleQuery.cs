@@ -1,7 +1,7 @@
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using SciArticle.Models.Front.User;
 using SciArticle.Models.Object;
+using SciArticle.Models.Front.Admin;
 
 namespace SciArticle.Models.Back;
 
@@ -9,9 +9,6 @@ public static class ArticleQuery
 {
     public static void CancelArticle(int id)
     {
-        Query q2 = new(Tbl.Article);
-        q2.Where(Field.Article__Id, id);
-        QDatabase.Exec(conn => Console.WriteLine($"Number {q2.Count(conn)}"));
         Query q = new(Tbl.Article);
         q.Where(Field.Article__Id, id);
         QDatabase.Exec(q.Delete);
@@ -32,9 +29,9 @@ public static class ArticleQuery
                 Abstract = form.Abstract,
                 Content = form.Content,
                 Topic = form.Topic,
-                AuthorId = authorId, // Use the passed author ID instead of form.Id
+                AuthorId = authorId,
                 TimeStamp = DateOnly.FromDateTime(DateTime.Now),
-                Status = ArticleStatus.Pending // New articles are always pending
+                Status = ArticleStatus.Pending
             };
             Query q = new(Tbl.Article);
             q.Insert(conn, string.Join(", ", article.ToList()));
@@ -71,5 +68,266 @@ public static class ArticleQuery
         q.Where(Field.Article__Id, id);
         q.Set(Field.Article__Status, ArticleStatus.Rejected);
         QDatabase.Exec(q.Update);
+    }
+
+    public static List<Article> GetArticlesByAuthor(int authorId, int page, int pageSize)
+    {
+        List<Article> articles = new();
+
+        void func(SqlConnection conn)
+        {
+            Query q = new(Tbl.Article);
+            q.Where(Field.Article__AuthorId, authorId);
+            q.OrderBy(Field.Article__Id, desc: true);
+            q.Offset(page, pageSize);
+            q.Select(conn, reader => articles.Add(QDataReader.getDataObj<Article>(reader)));
+        }
+
+        QDatabase.Exec(func);
+        return articles;
+    }
+
+    public static int GetArticleCountByAuthor(int authorId)
+    {
+        int count = 0;
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__AuthorId, authorId);
+        QDatabase.Exec(conn => count = q.Count(conn));
+        return count;
+    }
+
+    public static Article GetArticleById(int id)
+    {
+        Article article = new();
+
+        void func(SqlConnection conn)
+        {
+            Query q = new(Tbl.Article);
+            q.Where(Field.Article__Id, id);
+            q.Select(conn, reader => article = QDataReader.getDataObj<Article>(reader));
+        }
+
+        QDatabase.Exec(func);
+        return article;
+    }
+
+    public static List<Article> GetArticlesByStatus(string status, int page, int pageSize)
+    {
+        List<Article> articles = new();
+
+        Query q = new(Tbl.Article);
+        if (status != "All")
+        {
+            q.Where(Field.Article__Status, status);
+        }
+        q.OrderBy(Field.Article__Id, desc: true);
+        q.Offset(page, pageSize);
+        QDatabase.Exec(conn => q.Select(conn, reader => articles.Add(QDataReader.getDataObj<Article>(reader))));
+        return articles;
+    }
+
+    public static int GetArticleCountByStatus(string status)
+    {
+        int count = 0;
+
+        Query q = new(Tbl.Article);
+        if (status != "All")
+        {
+            q.Where(Field.Article__Status, status);
+        }
+
+        QDatabase.Exec(conn => count = q.Count(conn));
+        return count;
+    }
+
+    public static List<AuthorArticleCountViewModel> GetAuthorArticleStatistics(int page, int pageSize, string sortBy, string sortOrder)
+    {
+        List<AuthorArticleCountViewModel> authorStats = [];
+
+        Query q = new(Tbl.User);
+        q.Output(Field.User__Id);
+        q.Output(Field.User__Name);
+
+        Query countQ = new(Tbl.Article);
+        countQ.WhereField(Field.Article__AuthorId, Field.User__Id);
+        countQ.Output(QPiece.countAll);
+
+        Query approvedQ = new(Tbl.Article);
+        approvedQ.Where(Field.Article__Status, ArticleStatus.Approved);
+        approvedQ.WhereField(Field.Article__AuthorId, Field.User__Id);
+        approvedQ.Output(QPiece.countAll);
+
+        Query pendingQ = new(Tbl.Article);
+        pendingQ.Where(Field.Article__Status, ArticleStatus.Pending);
+        pendingQ.WhereField(Field.Article__AuthorId, Field.User__Id);
+        pendingQ.Output(QPiece.countAll);
+
+        Query rejectedQ = new(Tbl.Article);
+        rejectedQ.Where(Field.Article__Status, ArticleStatus.Rejected);
+        rejectedQ.WhereField(Field.Article__AuthorId, Field.User__Id);
+        rejectedQ.Output(QPiece.countAll);
+
+        q.OutputQuery(countQ.SelectQuery(), "[ArticleCount]");
+        q.OutputQuery(approvedQ.SelectQuery(), "[ApprovedCount]");
+        q.OutputQuery(pendingQ.SelectQuery(), "[PendingCount]");
+        q.OutputQuery(rejectedQ.SelectQuery(), "[RejectedCount]");
+        q.Offset(page, pageSize);
+
+        switch (sortBy)
+        {
+            case "AuthorName":
+                q.OrderBy(Field.User__Name, sortOrder != "asc");
+                break;
+            case "ArticleCount" or "ApprovedCount" or "PendingCount" or "RejectedCount":
+                q.OrderBy($"[{sortBy}]", sortOrder != "asc");
+                break;
+            default:
+                q.OrderBy("[ArticleCount]", sortOrder != "asc");
+                break;
+        }
+        
+        QDatabase.Exec(conn => q.Select(conn, reader =>
+        {
+            int pos = 0;
+            AuthorArticleCountViewModel authorStat = new()
+            {
+                AuthorId = QDataReader.getInt(reader, ref pos),
+                AuthorName = QDataReader.getStr(reader, ref pos),
+                ArticleCount = QDataReader.getInt(reader, ref pos),
+                ApprovedCount = QDataReader.getInt(reader, ref pos),
+                PendingCount = QDataReader.getInt(reader, ref pos),
+                RejectedCount = QDataReader.getInt(reader, ref pos) 
+            };
+            
+            authorStats.Add(authorStat);
+        }));
+
+        return authorStats;
+    }
+    
+    public static int GetAuthorWithArticlesCount()
+    {
+        int count = 0;
+        List<int> authorIds = [];
+        
+        void func(SqlConnection conn)
+        {
+            // Get distinct author IDs who have articles
+            Query q = new(Tbl.Article);
+            q.Output($"DISTINCT {Field.Article__AuthorId}");
+            q.Select(conn, reader => authorIds.Add(reader.GetInt32(0)));
+            count = authorIds.Count;
+        }
+        
+        QDatabase.Exec(func);
+        return count;
+    }
+    
+    public static List<TopicArticleCountViewModel> GetTopicArticleStatistics(int page, int pageSize, string sortBy, string sortOrder)
+    {
+        List<TopicArticleCountViewModel> topicStats = [];
+
+        Query q = new(Tbl.Article);
+        q.Output($"DISTINCT {Field.Article__Topic}");
+
+        Query countQ = new(Tbl.Article, "r");
+        countQ.WhereField(Field.Article__Topic, Field.Article__Topic, "r");
+        countQ.Output(QPiece.countAll);
+
+        Query approvedQ = new(Tbl.Article, "r");
+        approvedQ.Where(Field.Article__Status, ArticleStatus.Approved, "r");
+        approvedQ.WhereField(Field.Article__Topic, Field.Article__Topic, "r");
+        approvedQ.Output(QPiece.countAll);
+
+        Query pendingQ = new(Tbl.Article, "r");
+        pendingQ.Where(Field.Article__Status, ArticleStatus.Pending, "r");
+        pendingQ.WhereField(Field.Article__Topic, Field.Article__Topic, "r");
+        pendingQ.Output(QPiece.countAll);
+
+        Query rejectedQ = new(Tbl.Article, "r");
+        rejectedQ.Where(Field.Article__Status, ArticleStatus.Rejected, "r");
+        rejectedQ.WhereField(Field.Article__Topic, Field.Article__Topic, "r");
+        rejectedQ.Output(QPiece.countAll);
+
+        q.OutputQuery(countQ.SelectQuery(), "[ArticleCount]");
+        q.OutputQuery(approvedQ.SelectQuery(), "[ApprovedCount]");
+        q.OutputQuery(pendingQ.SelectQuery(), "[PendingCount]");
+        q.OutputQuery(rejectedQ.SelectQuery(), "[RejectedCount]");
+        q.Offset(page, pageSize);
+
+        switch (sortBy)
+        {
+            case "TopicName":
+                q.OrderBy(Field.Article__Topic, sortOrder != "asc");
+                break;
+            case "ArticleCount" or "ApprovedCount" or "PendingCount" or "RejectedCount":
+                q.OrderBy($"[{sortBy}]", sortOrder != "asc");
+                break;
+            default:
+                q.OrderBy("[ArticleCount]", sortOrder != "asc");
+                break;
+        }
+
+        QDatabase.Exec(conn => q.Select(conn, reader =>
+        {
+            int pos = 0;
+            TopicArticleCountViewModel topicStat = new()
+            {
+                TopicName = QDataReader.getStr(reader, ref pos),
+                ArticleCount = QDataReader.getInt(reader, ref pos),
+                ApprovedCount = QDataReader.getInt(reader, ref pos),
+                PendingCount = QDataReader.getInt(reader, ref pos),
+                RejectedCount = QDataReader.getInt(reader, ref pos) 
+            };
+            
+            topicStats.Add(topicStat);
+        }));
+
+        return topicStats;
+    }
+    
+    public static int GetTopicCount()
+    {
+        int count = 0;
+        List<string> topics = new();
+        
+        void func(SqlConnection conn)
+        {
+            // Get distinct topics
+            Query q = new(Tbl.Article);
+            q.Output($"DISTINCT {Field.Article__Topic}");
+            q.Select(conn, reader => 
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    topics.Add(reader.GetString(0));
+                }
+            });
+            
+            count = topics.Count;
+        }
+        
+        QDatabase.Exec(func);
+        return count;
+    }
+    
+    public static int GetTotalArticleCount()
+    {
+        int count = 0;
+
+        Query q = new(Tbl.Article);
+        q.Output(QPiece.countAll);
+        QDatabase.Exec(conn => count = q.Count(conn));
+        return count;
+    }
+    
+    public static int GetArticleCountByStatusType(string status)
+    {
+        int count = 0;
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__Status, status);
+        q.Output(QPiece.countAll);
+        QDatabase.Exec(conn => count = q.Count(conn));
+        return count;
     }
 }

@@ -1,11 +1,11 @@
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SciArticle.Models;
+using SciArticle.Models.Back;
 using SciArticle.Models.Front.Admin;
 using SciArticle.Models.Front.User;
 using SciArticle.Models.Object;
-using SciArticle.Models.Back;
-using System.Linq;
 
 namespace SciArticle.Controllers;
 
@@ -13,7 +13,7 @@ namespace SciArticle.Controllers;
 public class AdminController : Controller
 {
     private readonly ILogger<AdminController> _logger;
-    private readonly MainContext _context;
+    private readonly MainContext _context; // Keep for backward compatibility
     private const int ItemsPerPage = 10;
 
     public AdminController(ILogger<AdminController> logger, MainContext context)
@@ -24,67 +24,55 @@ public class AdminController : Controller
 
     public IActionResult Dashboard(int page = 1, string statusFilter = "All")
     {
-        // Get the current admin's username
         string username = User.Identity?.Name ?? string.Empty;
-        
-        // Find the admin by username
-        var admin = _context.User.FirstOrDefault(u => u.Username == username && u.Role == UserRole.Admin);
-        if (admin == null)
+        var admin = UserQuery.GetUserByUsername(username);
+        if (admin == null || admin.Role != UserRole.Admin)
         {
             return RedirectToAction("Login", "Account");
         }
 
-        // Query for articles with optional status filter
-        var articlesQuery = _context.Article.AsQueryable();
+        int totalItems = ArticleQuery.GetArticleCountByStatus(statusFilter);
         
-        // Apply status filter if not "All"
-        if (statusFilter != "All")
+        page = Math.Max(1, page);
+        var articles = ArticleQuery.GetArticlesByStatus(statusFilter, page, ItemsPerPage);
+        
+        // Get the authors for these articles
+        var authorIds = articles.Select(a => a.AuthorId).Distinct().ToList();
+        var authors = new Dictionary<int, string>();
+        
+        foreach (var authorId in authorIds)
         {
-            articlesQuery = articlesQuery.Where(a => a.Status == statusFilter);
+            var author = UserQuery.GetUserById(authorId);
+            if (author != null)
+            {
+                authors[authorId] = author.Name;
+            }
         }
         
-        // Get the total count of articles with the filter applied
-        int totalItems = articlesQuery.Count();
-        
-        // Calculate pagination values
-        page = Math.Max(1, page); // Ensure page is at least 1
-        int skip = (page - 1) * ItemsPerPage;
-        
-        // Get the articles with pagination
-        var articles = articlesQuery
-            .OrderByDescending(a => a.Id)
-            .Skip(skip)
-            .Take(ItemsPerPage)
+        var articleViewModels = articles
+            .Select(a => new AdminArticleViewModel
+            {
+                Id = a.Id,
+                Title = a.Title,
+                AuthorId = a.AuthorId,
+                AuthorName = authors.ContainsKey(a.AuthorId) ? authors[a.AuthorId] : "Unknown",
+                TimeStamp = a.TimeStamp,
+                Topic = a.Topic,
+                Status = a.Status,
+            })
             .ToList();
-
-        // Get author names for the articles
-        var authorIds = articles.Select(a => a.AuthorId).Distinct().ToList();
-        var authors = _context.User.Where(u => authorIds.Contains(u.Id)).ToDictionary(u => u.Id, u => u.Name);
-
-        // Create view models for the articles
-        var articleViewModels = articles.Select(a => new AdminArticleViewModel
-        {
-            Id = a.Id,
-            Title = a.Title,
-            AuthorId = a.AuthorId,
-            AuthorName = authors.ContainsKey(a.AuthorId) ? authors[a.AuthorId] : "Unknown",
-            TimeStamp = a.TimeStamp,
-            Topic = a.Topic,
-            Status = a.Status
-        }).ToList();
-
-        // Create the view model
+            
         var viewModel = new AdminDashboardViewModel
         {
             AdminName = admin.Name,
             Articles = articleViewModels,
             StatusFilter = statusFilter,
-            Pagination = new Models.Front.User.PaginationInfo
+            Pagination = new()
             {
                 CurrentPage = page,
                 ItemsPerPage = ItemsPerPage,
-                TotalItems = totalItems
-            }
+                TotalItems = totalItems,
+            },
         };
 
         return View(viewModel);
@@ -96,14 +84,14 @@ public class AdminController : Controller
     {
         // Get the current admin's username
         string username = User.Identity?.Name ?? string.Empty;
-        var admin = _context.User.FirstOrDefault(u => u.Username == username && u.Role == UserRole.Admin);
-        if (admin == null)
+        var admin = UserQuery.GetUserByUsername(username);
+        if (admin == null || admin.Role != UserRole.Admin)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article to verify it exists
-        var article = _context.Article.FirstOrDefault(a => a.Id == id);
+        var article = ArticleQuery.GetArticleById(id);
         if (article == null)
         {
             return NotFound();
@@ -112,9 +100,13 @@ public class AdminController : Controller
         // Use ArticleQuery to update the article status
         ArticleQuery.ApproveArticle(id);
 
-        _logger.LogInformation("Article {Id} approved by admin {Username} at {Time}", 
-            article.Id, admin.Username, DateTime.Now);
-        
+        _logger.LogInformation(
+            "Article {Id} approved by admin {Username} at {Time}",
+            article.Id,
+            admin.Username,
+            DateTime.Now
+        );
+
         TempData["SuccessMessage"] = "Bài báo đã được phê duyệt thành công.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
     }
@@ -125,14 +117,14 @@ public class AdminController : Controller
     {
         // Get the current admin's username
         string username = User.Identity?.Name ?? string.Empty;
-        var admin = _context.User.FirstOrDefault(u => u.Username == username && u.Role == UserRole.Admin);
-        if (admin == null)
+        var admin = UserQuery.GetUserByUsername(username);
+        if (admin == null || admin.Role != UserRole.Admin)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article to verify it exists
-        var article = _context.Article.FirstOrDefault(a => a.Id == id);
+        var article = ArticleQuery.GetArticleById(id);
         if (article == null)
         {
             return NotFound();
@@ -141,9 +133,13 @@ public class AdminController : Controller
         // Use ArticleQuery to update the article status
         ArticleQuery.RejectArticle(id);
 
-        _logger.LogInformation("Article {Id} rejected by admin {Username} at {Time}", 
-            article.Id, admin.Username, DateTime.Now);
-        
+        _logger.LogInformation(
+            "Article {Id} rejected by admin {Username} at {Time}",
+            article.Id,
+            admin.Username,
+            DateTime.Now
+        );
+
         TempData["SuccessMessage"] = "Bài báo đã bị từ chối.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
     }
@@ -152,21 +148,21 @@ public class AdminController : Controller
     {
         // Get the current admin's username
         string username = User.Identity?.Name ?? string.Empty;
-        var admin = _context.User.FirstOrDefault(u => u.Username == username && u.Role == UserRole.Admin);
-        if (admin == null)
+        var admin = UserQuery.GetUserByUsername(username);
+        if (admin == null || admin.Role != UserRole.Admin)
         {
             return RedirectToAction("Login", "Account");
         }
 
         // Get the article
-        var article = _context.Article.FirstOrDefault(a => a.Id == id);
+        var article = ArticleQuery.GetArticleById(id);
         if (article == null)
         {
             return NotFound();
         }
 
         // Get the author of the article
-        var author = _context.User.FirstOrDefault(u => u.Id == article.AuthorId);
+        var author = UserQuery.GetUserById(article.AuthorId);
         string authorName = author?.Name ?? "Unknown";
 
         // Create the view model
@@ -182,32 +178,35 @@ public class AdminController : Controller
             Topic = article.Topic,
             Status = article.Status,
             Page = page,
-            StatusFilter = statusFilter
+            StatusFilter = statusFilter,
         };
 
         return View(viewModel);
     }
-
-    public IActionResult Statistics(int page = 1, int topicPage = 1, string view = "authors", 
-        string sortBy = "ArticleCount", string sortOrder = "desc",
-        string topicSortBy = "ArticleCount", string topicSortOrder = "desc")
+    
+    public IActionResult Statistics(
+        int page = 1,
+        int topicPage = 1,
+        string view = "authors",
+        string sortBy = "ArticleCount",
+        string sortOrder = "desc",
+        string topicSortBy = "ArticleCount",
+        string topicSortOrder = "desc"
+    )
     {
         // Get the current admin's username
         string username = User.Identity?.Name ?? string.Empty;
-        var admin = _context.User.FirstOrDefault(u => u.Username == username && u.Role == UserRole.Admin);
-        if (admin == null)
+        var admin = UserQuery.GetUserByUsername(username);
+        if (admin == null || admin.Role != UserRole.Admin)
         {
             return RedirectToAction("Login", "Account");
         }
 
-        // Get all articles for counting
-        var allArticles = _context.Article.ToList();
-        
-        // Calculate overall article statistics
-        int totalArticles = allArticles.Count;
-        int approvedArticles = allArticles.Count(a => a.Status == ArticleStatus.Approved);
-        int pendingArticles = allArticles.Count(a => a.Status == ArticleStatus.Pending);
-        int rejectedArticles = allArticles.Count(a => a.Status == ArticleStatus.Rejected);
+        // Calculate overall article statistics using our query methods
+        int totalArticles = ArticleQuery.GetTotalArticleCount();
+        int approvedArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Approved);
+        int pendingArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Pending);
+        int rejectedArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Rejected);
 
         // Initialize view model
         var viewModel = new AuthorStatisticsViewModel
@@ -221,72 +220,23 @@ public class AdminController : Controller
             SortBy = sortBy,
             SortOrder = sortOrder,
             TopicSortBy = topicSortBy,
-            TopicSortOrder = topicSortOrder
+            TopicSortOrder = topicSortOrder,
         };
 
-        // Calculate authors statistics with pagination
+        // Get author statistics with pagination if viewing authors tab
         if (view == "authors" || view == "both")
         {
-            var authors = _context.User
-                .Where(u => u.Role == UserRole.Author)
-                .Select(u => new { 
-                    User = u,
-                    ArticleCount = _context.Article.Count(a => a.AuthorId == u.Id),
-                    ApprovedCount = _context.Article.Count(a => a.AuthorId == u.Id && a.Status == ArticleStatus.Approved),
-                    PendingCount = _context.Article.Count(a => a.AuthorId == u.Id && a.Status == ArticleStatus.Pending),
-                    RejectedCount = _context.Article.Count(a => a.AuthorId == u.Id && a.Status == ArticleStatus.Rejected)
-                })
-                .Where(a => a.ArticleCount > 0)
-                .AsEnumerable();
-
-            // Apply sorting
-            authors = sortBy switch
-            {
-                "AuthorName" => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.User.Name) 
-                    : authors.OrderByDescending(a => a.User.Name),
-                "ArticleCount" => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.ArticleCount) 
-                    : authors.OrderByDescending(a => a.ArticleCount),
-                "ApprovedCount" => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.ApprovedCount) 
-                    : authors.OrderByDescending(a => a.ApprovedCount),
-                "PendingCount" => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.PendingCount) 
-                    : authors.OrderByDescending(a => a.PendingCount),
-                "RejectedCount" => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.RejectedCount) 
-                    : authors.OrderByDescending(a => a.RejectedCount),
-                _ => sortOrder == "asc" 
-                    ? authors.OrderBy(a => a.ArticleCount) 
-                    : authors.OrderByDescending(a => a.ArticleCount)
-            };
-                
-            // Get total count of authors with articles for pagination
-            int totalAuthors = authors.Count();
+            // Ensure page is at least 1
+            page = Math.Max(1, page);
             
-            // Calculate pagination values for authors
-            page = Math.Max(1, page); // Ensure page is at least 1
-            int skipAuthors = (page - 1) * ItemsPerPage;
+            // Get total count of authors with articles
+            int totalAuthors = ArticleQuery.GetAuthorWithArticlesCount();
             
-            // Get the authors with pagination
-            var paginatedAuthors = authors
-                .Skip(skipAuthors)
-                .Take(ItemsPerPage)
-                .ToList();
-
-            // Create view models for the authors with article counts
-            var authorViewModels = paginatedAuthors.Select(a => new AuthorArticleCountViewModel
-            {
-                AuthorId = a.User.Id,
-                AuthorName = a.User.Name,
-                ArticleCount = a.ArticleCount,
-                ApprovedCount = a.ApprovedCount,
-                PendingCount = a.PendingCount,
-                RejectedCount = a.RejectedCount
-            }).ToList();
-
-            viewModel.AuthorArticleCounts = authorViewModels;
+            // Get author statistics with pagination
+            var authorStats = ArticleQuery.GetAuthorArticleStatistics(page, ItemsPerPage, sortBy, sortOrder);
+            
+            // Set values in view model
+            viewModel.AuthorArticleCounts = authorStats;
             viewModel.Pagination = new PaginationInfo
             {
                 CurrentPage = page,
@@ -295,68 +245,20 @@ public class AdminController : Controller
             };
         }
 
-        // Calculate topic statistics with pagination
+        // Get topic statistics with pagination if viewing topics tab
         if (view == "topics" || view == "both")
         {
-            // Group articles by topic and count by status
-            var topics = allArticles
-                .GroupBy(a => a.Topic)
-                .Select(g => new {
-                    TopicName = g.Key,
-                    ArticleCount = g.Count(),
-                    ApprovedCount = g.Count(a => a.Status == ArticleStatus.Approved),
-                    PendingCount = g.Count(a => a.Status == ArticleStatus.Pending),
-                    RejectedCount = g.Count(a => a.Status == ArticleStatus.Rejected)
-                })
-                .ToList();
-
-            // Apply sorting for topics
-            topics = topicSortBy switch
-            {
-                "TopicName" => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.TopicName).ToList() 
-                    : topics.OrderByDescending(t => t.TopicName).ToList(),
-                "ArticleCount" => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.ArticleCount).ToList() 
-                    : topics.OrderByDescending(t => t.ArticleCount).ToList(),
-                "ApprovedCount" => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.ApprovedCount).ToList() 
-                    : topics.OrderByDescending(t => t.ApprovedCount).ToList(),
-                "PendingCount" => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.PendingCount).ToList() 
-                    : topics.OrderByDescending(t => t.PendingCount).ToList(),
-                "RejectedCount" => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.RejectedCount).ToList() 
-                    : topics.OrderByDescending(t => t.RejectedCount).ToList(),
-                _ => topicSortOrder == "asc" 
-                    ? topics.OrderBy(t => t.ArticleCount).ToList() 
-                    : topics.OrderByDescending(t => t.ArticleCount).ToList()
-            };
-
-            // Get total count of topics for pagination
-            int totalTopics = topics.Count;
+            // Ensure page is at least 1
+            topicPage = Math.Max(1, topicPage);
             
-            // Calculate pagination values for topics
-            topicPage = Math.Max(1, topicPage); // Ensure page is at least 1
-            int skipTopics = (topicPage - 1) * ItemsPerPage;
+            // Get total count of topics
+            int totalTopics = ArticleQuery.GetTopicCount();
             
-            // Get the topics with pagination
-            var paginatedTopics = topics
-                .Skip(skipTopics)
-                .Take(ItemsPerPage)
-                .ToList();
-
-            // Create view models for the topics with article counts
-            var topicViewModels = paginatedTopics.Select(t => new TopicArticleCountViewModel
-            {
-                TopicName = t.TopicName,
-                ArticleCount = t.ArticleCount,
-                ApprovedCount = t.ApprovedCount,
-                PendingCount = t.PendingCount,
-                RejectedCount = t.RejectedCount
-            }).ToList();
-
-            viewModel.TopicArticleCounts = topicViewModels;
+            // Get topic statistics with pagination
+            var topicStats = ArticleQuery.GetTopicArticleStatistics(topicPage, ItemsPerPage, topicSortBy, topicSortOrder);
+            
+            // Set values in view model
+            viewModel.TopicArticleCounts = topicStats;
             viewModel.TopicPagination = new PaginationInfo
             {
                 CurrentPage = topicPage,
@@ -368,3 +270,4 @@ public class AdminController : Controller
         return View(viewModel);
     }
 }
+

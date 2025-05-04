@@ -1,6 +1,6 @@
 using Microsoft.Data.SqlClient;
 
-abstract class DataObj
+public abstract class DataObj
 {
     // ========================================================================
     // INFO: fetch là phương thức dùng để lấy dữ liệu từ SqlDataReader.

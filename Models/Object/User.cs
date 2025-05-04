@@ -1,11 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.Data.SqlClient;
 
 namespace SciArticle.Models.Object;
 class UserRole {
     public const string Admin = "Admin";
     public const string Author = "Author";
 }
-public class User
+public class User : DataObj
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -15,7 +15,18 @@ public class User
     public string Password { get; set; } = string.Empty;
     public string Role { get; set; } = UserRole.Author;
 
-    public List<string> ToList() {
+    public override void fetch(SqlDataReader reader, ref int pos)
+    {
+        base.fetch(reader, ref pos);
+        Id = QDataReader.getInt(reader, ref pos);
+        Name = QDataReader.getStr(reader, ref pos);
+        Birthday = QDataReader.getDate(reader, ref pos);
+        Email = QDataReader.getStr(reader, ref pos);
+        Username = QDataReader.getStr(reader, ref pos);
+        Password = QDataReader.getStr(reader, ref pos);
+        Role = QDataReader.getStr(reader, ref pos);
+    }
+    public override List<string> ToList() {
         List<string> fields = [
             QPiece.toStr(Id),
             QPiece.toNStr(Name),
