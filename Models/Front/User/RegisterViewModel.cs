@@ -4,32 +4,30 @@ namespace SciArticle.Models.Front.User;
 
 public class RegisterViewModel
 {
-    [Required]
+    [Required(ErrorMessage = "Họ và tên không được để trống")]
     [Display(Name = "Full Name")]
     public string Name { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
     [Display(Name = "Username")]
     public string Username { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Email không được để trống")]
     [EmailAddress]
-    [Display(Name = "Email")]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Mật khẩu không được để trống")]
     [DataType(DataType.Password)]
-    [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
     [Display(Name = "Password")]
+    [StringLength(100, ErrorMessage = "Mật khẩu phải có độ dài ít nhất {2} kí tự", MinimumLength = 6)]
     public string Password { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Xác nhận mật khẩu không được để trống")]
     [DataType(DataType.Password)]
-    [Display(Name = "Confirm password")]
-    [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+    [Compare("Password", ErrorMessage = "Mật khẩu không khớp")]
     public string ConfirmPassword { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Ngày sinh không được để trống")]
     [DataType(DataType.Date)]
-    [Display(Name = "Birthday")]
     public DateOnly Birthday { get; set; } = DateOnly.FromDateTime(DateTime.Now.AddYears(-18));
 }

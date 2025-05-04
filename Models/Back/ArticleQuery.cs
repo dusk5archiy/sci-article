@@ -18,8 +18,7 @@ public static class ArticleQuery
     {
         int nextId = 0;
         Article article = new();
-
-        void func(SqlConnection conn)
+        QDatabase.Exec(conn =>
         {
             nextId = IdCounterQuery.GetIdThenIncrement(conn, Tbl.Article);
             article = new()
@@ -36,7 +35,7 @@ public static class ArticleQuery
             Query q = new(Tbl.Article);
             q.Insert(conn, string.Join(", ", article.ToList()));
         }
-        QDatabase.Exec(func);
+        );
         return article;
     }
 
@@ -74,16 +73,11 @@ public static class ArticleQuery
     {
         List<Article> articles = [];
 
-        void func(SqlConnection conn)
-        {
-            Query q = new(Tbl.Article);
-            q.Where(Field.Article__AuthorId, authorId);
-            q.OrderBy(Field.Article__Id, desc: true);
-            q.Offset(page, pageSize);
-            q.Select(conn, reader => articles.Add(QDataReader.getDataObj<Article>(reader)));
-        }
-
-        QDatabase.Exec(func);
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__AuthorId, authorId);
+        q.OrderBy(Field.Article__Id, desc: true);
+        q.Offset(page, pageSize);
+        QDatabase.Exec(conn => q.Select(conn, reader => articles.Add(QDataReader.getDataObj<Article>(reader))));
         return articles;
     }
 
@@ -100,14 +94,9 @@ public static class ArticleQuery
     {
         Article? article = null;
 
-        void func(SqlConnection conn)
-        {
-            Query q = new(Tbl.Article);
-            q.Where(Field.Article__Id, id);
-            q.Select(conn, reader => article = QDataReader.getDataObj<Article>(reader));
-        }
-
-        QDatabase.Exec(func);
+        Query q = new(Tbl.Article);
+        q.Where(Field.Article__Id, id);
+        QDatabase.Exec(conn => q.Select(conn, reader => article = QDataReader.getDataObj<Article>(reader)));
         return article;
     }
 
@@ -185,7 +174,7 @@ public static class ArticleQuery
                 q.OrderBy("[ArticleCount]", sortOrder != "asc");
                 break;
         }
-        
+
         QDatabase.Exec(conn => q.Select(conn, reader =>
         {
             int pos = 0;
@@ -196,33 +185,24 @@ public static class ArticleQuery
                 ArticleCount = QDataReader.getInt(reader, ref pos),
                 ApprovedCount = QDataReader.getInt(reader, ref pos),
                 PendingCount = QDataReader.getInt(reader, ref pos),
-                RejectedCount = QDataReader.getInt(reader, ref pos) 
+                RejectedCount = QDataReader.getInt(reader, ref pos)
             };
-            
+
             authorStats.Add(authorStat);
         }));
 
         return authorStats;
     }
-    
+
     public static int GetAuthorWithArticlesCount()
     {
         int count = 0;
-        List<int> authorIds = [];
-        
-        void func(SqlConnection conn)
-        {
-            // Get distinct author IDs who have articles
-            Query q = new(Tbl.Article);
-            q.Output($"DISTINCT {Field.Article__AuthorId}");
-            q.Select(conn, reader => authorIds.Add(reader.GetInt32(0)));
-            count = authorIds.Count;
-        }
-        
-        QDatabase.Exec(func);
+        Query q = new(Tbl.Article);
+        q.Output($"DISTINCT {Field.Article__AuthorId}");
+        QDatabase.Exec(conn => count = q.Count(conn));
         return count;
     }
-    
+
     public static List<TopicArticleCountViewModel> GetTopicArticleStatistics(int page, int pageSize, string sortBy, string sortOrder)
     {
         List<TopicArticleCountViewModel> topicStats = [];
@@ -277,40 +257,39 @@ public static class ArticleQuery
                 ArticleCount = QDataReader.getInt(reader, ref pos),
                 ApprovedCount = QDataReader.getInt(reader, ref pos),
                 PendingCount = QDataReader.getInt(reader, ref pos),
-                RejectedCount = QDataReader.getInt(reader, ref pos) 
+                RejectedCount = QDataReader.getInt(reader, ref pos)
             };
-            
+
             topicStats.Add(topicStat);
         }));
 
         return topicStats;
     }
-    
+
     public static int GetTopicCount()
     {
         int count = 0;
         List<string> topics = new();
-        
+
         void func(SqlConnection conn)
         {
-            // Get distinct topics
             Query q = new(Tbl.Article);
             q.Output($"DISTINCT {Field.Article__Topic}");
-            q.Select(conn, reader => 
+            q.Select(conn, reader =>
             {
                 if (!reader.IsDBNull(0))
                 {
                     topics.Add(reader.GetString(0));
                 }
             });
-            
+
             count = topics.Count;
         }
-        
+
         QDatabase.Exec(func);
         return count;
     }
-    
+
     public static int GetTotalArticleCount()
     {
         int count = 0;
@@ -320,7 +299,7 @@ public static class ArticleQuery
         QDatabase.Exec(conn => count = q.Count(conn));
         return count;
     }
-    
+
     public static int GetArticleCountByStatusType(string status)
     {
         int count = 0;
@@ -329,5 +308,81 @@ public static class ArticleQuery
         q.Output(QPiece.countAll);
         QDatabase.Exec(conn => count = q.Count(conn));
         return count;
+    }
+
+    public static List<AdminArticleViewModel> GetArticlesForAdminDashboard(string statusFilter, int page, int pageSize)
+    {
+        List<AdminArticleViewModel> articleViewModels = [];
+        Query articleQ = new(Tbl.Article);
+        articleQ.Output(Field.Article__Id);
+        articleQ.Output(Field.Article__Title);
+        articleQ.Output(Field.Article__AuthorId);
+        articleQ.Output(Field.Article__TimeStamp);
+        articleQ.Output(Field.Article__Topic);
+        articleQ.Output(Field.Article__Status);
+        
+        articleQ.Join(Field.User__Id, Field.Article__AuthorId);
+        articleQ.Output(Field.User__Name);
+        
+        if (statusFilter != "All")
+        {
+            articleQ.Where(Field.Article__Status, statusFilter);
+        }
+        
+        articleQ.OrderBy(Field.Article__Id, desc: true);
+        articleQ.Offset(page, pageSize);
+        
+        QDatabase.Exec(conn => articleQ.Select(conn, reader =>
+        {
+            int pos = 0;
+            AdminArticleViewModel viewModel = new()
+            {
+                Id = QDataReader.getInt(reader, ref pos),
+                Title = QDataReader.getStr(reader, ref pos),
+                AuthorId = QDataReader.getInt(reader, ref pos),
+                TimeStamp = QDataReader.getDate(reader, ref pos),
+                Topic = QDataReader.getStr(reader, ref pos),
+                Status = QDataReader.getStr(reader, ref pos),
+                AuthorName = QDataReader.getStr(reader, ref pos)
+            };
+            
+            articleViewModels.Add(viewModel);
+        }));
+        
+        return articleViewModels;
+    }
+
+    public static List<AuthorArticleViewModel> GetArticlesForAuthorDashboard(int authorId, int page, int pageSize)
+    {
+        List<AuthorArticleViewModel> articleViewModels = [];
+
+        Query articleQ = new(Tbl.Article);
+        articleQ.Output(Field.Article__Id);
+        articleQ.Output(Field.Article__Title);
+        articleQ.Output(Field.Article__TimeStamp);
+        articleQ.Output(Field.Article__Topic);
+        articleQ.Output(Field.Article__Status);
+        
+        articleQ.Where(Field.Article__AuthorId, authorId);
+        
+        articleQ.OrderBy(Field.Article__Id, desc: true);
+        articleQ.Offset(page, pageSize);
+        
+        QDatabase.Exec(conn => articleQ.Select(conn, reader =>
+        {
+            int pos = 0;
+            AuthorArticleViewModel viewModel = new()
+            {
+                Id = QDataReader.getInt(reader, ref pos),
+                Title = QDataReader.getStr(reader, ref pos),
+                TimeStamp = QDataReader.getDate(reader, ref pos),
+                Topic = QDataReader.getStr(reader, ref pos),
+                Status = QDataReader.getStr(reader, ref pos)
+            };
+            
+            articleViewModels.Add(viewModel);
+        }));
+        
+        return articleViewModels;
     }
 }

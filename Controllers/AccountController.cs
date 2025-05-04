@@ -98,13 +98,13 @@ public class AccountController : Controller
 
         if (UserQuery.UsernameExists(model.Username))
         {
-            ModelState.AddModelError("Username", "Username is already taken.");
+            ModelState.AddModelError("Username", "Tên đăng nhập đã tồn tại");
             return View(model);
         }
 
         if (UserQuery.EmailExists(model.Email))
         {
-            ModelState.AddModelError("Email", "Email is already registered.");
+            ModelState.AddModelError("Email", "Email đã tồn tại trong hệ thống");
             return View(model);
         }
 

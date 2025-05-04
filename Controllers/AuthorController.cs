@@ -21,15 +21,9 @@ public class AuthorController : Controller
         var user = GetCurrentUser();
         int totalItems = ArticleQuery.GetArticleCountByAuthor(user.Id);
         page = Math.Max(1, page); 
-        var articles = ArticleQuery.GetArticlesByAuthor(user.Id, page, ItemsPerPage);
-        var articleViewModels = articles.Select(a => new AuthorArticleViewModel
-        {
-            Id = a.Id,
-            Title = a.Title,
-            TimeStamp = a.TimeStamp,
-            Topic = a.Topic,
-            Status = a.Status
-        }).ToList();
+        
+        var articleViewModels = ArticleQuery.GetArticlesForAuthorDashboard(user.Id, page, ItemsPerPage);
+        
         var viewModel = new AuthorDashboardViewModel
         {
             AuthorName = user.Name,

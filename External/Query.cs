@@ -395,24 +395,6 @@ class Query
         Insert(conn, string.Join(", ", obj.ToList()));
     }
 
-    // ------------------------------------------------------------------------
-    public async Task DeleteAsync(SqlConnection conn) => 
-        await QDatabase.ExecQueryAsync(conn, DeleteQuery());
-
-    // ------------------------------------------------------------------------
-    public async Task InsertAsync(SqlConnection conn, string data) =>
-        await QDatabase.ExecQueryAsync(conn, InsertQuery(data));
-
-    // ------------------------------------------------------------------------
-    public async Task UpdateAsync(SqlConnection conn) => 
-        await QDatabase.ExecQueryAsync(conn, UpdateQuery());
-
-    public async Task InsertAsync<T>(SqlConnection conn, T obj)
-        where T : DataObj, new()
-    {
-        await InsertAsync(conn, string.Join(", ", obj.ToList()));
-    }
-
     // ========================================================================
 }
 
