@@ -65,12 +65,14 @@ public class AccountController : Controller
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        _logger.LogInformation("User {Username} logged in at {Time}", user.Username, DateTime.UtcNow);
-
         // Check if the user is an author and redirect to the author dashboard
         if (user.Role == UserRole.Author)
         {
             return RedirectToAction("Dashboard", "Author");
+        }
+        if (user.Role == UserRole.Admin)
+        {
+            return RedirectToAction("Dashboard", "Admin");
         }
 
         // Otherwise use the returnUrl or default to the home page

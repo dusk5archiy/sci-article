@@ -72,7 +72,7 @@ public static class ArticleQuery
 
     public static List<Article> GetArticlesByAuthor(int authorId, int page, int pageSize)
     {
-        List<Article> articles = new();
+        List<Article> articles = [];
 
         void func(SqlConnection conn)
         {

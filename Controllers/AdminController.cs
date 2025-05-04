@@ -22,14 +22,16 @@ public class AdminController : Controller
         _context = context;
     }
 
-    public IActionResult Dashboard(int page = 1, string statusFilter = "All")
+    // Helper method to get the current authenticated admin user
+    private User? GetCurrentAdmin()
     {
         string username = User.Identity?.Name ?? string.Empty;
-        var admin = UserQuery.GetUserByUsername(username);
-        if (admin == null || admin.Role != UserRole.Admin)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        return UserQuery.GetUserByUsername(username);
+    }
+
+    public IActionResult Dashboard(int page = 1, string statusFilter = "All")
+    {
+        var admin = GetCurrentAdmin();
 
         int totalItems = ArticleQuery.GetArticleCountByStatus(statusFilter);
         
@@ -64,7 +66,7 @@ public class AdminController : Controller
             
         var viewModel = new AdminDashboardViewModel
         {
-            AdminName = admin.Name,
+            AdminName = admin?.Name ?? "Admin",
             Articles = articleViewModels,
             StatusFilter = statusFilter,
             Pagination = new()
@@ -82,13 +84,7 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ApproveArticle(int id, int page = 1, string statusFilter = "All")
     {
-        // Get the current admin's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var admin = UserQuery.GetUserByUsername(username);
-        if (admin == null || admin.Role != UserRole.Admin)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var admin = GetCurrentAdmin();
 
         // Get the article to verify it exists
         var article = ArticleQuery.GetArticleById(id);
@@ -99,14 +95,6 @@ public class AdminController : Controller
 
         // Use ArticleQuery to update the article status
         ArticleQuery.ApproveArticle(id);
-
-        _logger.LogInformation(
-            "Article {Id} approved by admin {Username} at {Time}",
-            article.Id,
-            admin.Username,
-            DateTime.Now
-        );
-
         TempData["SuccessMessage"] = "Bài báo đã được phê duyệt thành công.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
     }
@@ -115,13 +103,7 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult RejectArticle(int id, int page = 1, string statusFilter = "All")
     {
-        // Get the current admin's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var admin = UserQuery.GetUserByUsername(username);
-        if (admin == null || admin.Role != UserRole.Admin)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var admin = GetCurrentAdmin();
 
         // Get the article to verify it exists
         var article = ArticleQuery.GetArticleById(id);
@@ -132,27 +114,13 @@ public class AdminController : Controller
 
         // Use ArticleQuery to update the article status
         ArticleQuery.RejectArticle(id);
-
-        _logger.LogInformation(
-            "Article {Id} rejected by admin {Username} at {Time}",
-            article.Id,
-            admin.Username,
-            DateTime.Now
-        );
-
         TempData["SuccessMessage"] = "Bài báo đã bị từ chối.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
     }
 
     public IActionResult Details(int id, int page = 1, string statusFilter = "All")
     {
-        // Get the current admin's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var admin = UserQuery.GetUserByUsername(username);
-        if (admin == null || admin.Role != UserRole.Admin)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var admin = GetCurrentAdmin();
 
         // Get the article
         var article = ArticleQuery.GetArticleById(id);
@@ -194,13 +162,7 @@ public class AdminController : Controller
         string topicSortOrder = "desc"
     )
     {
-        // Get the current admin's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var admin = UserQuery.GetUserByUsername(username);
-        if (admin == null || admin.Role != UserRole.Admin)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var admin = GetCurrentAdmin();
 
         // Calculate overall article statistics using our query methods
         int totalArticles = ArticleQuery.GetTotalArticleCount();
@@ -211,7 +173,7 @@ public class AdminController : Controller
         // Initialize view model
         var viewModel = new AuthorStatisticsViewModel
         {
-            AdminName = admin.Name,
+            AdminName = admin?.Name ?? "Admin",
             TotalArticles = totalArticles,
             ApprovedArticles = approvedArticles,
             PendingArticles = pendingArticles,

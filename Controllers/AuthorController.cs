@@ -13,25 +13,26 @@ namespace SciArticle.Controllers;
 public class AuthorController : Controller
 {
     private readonly ILogger<AuthorController> _logger;
+    private readonly MainContext _context;
     private const int ItemsPerPage = 10;
 
     public AuthorController(ILogger<AuthorController> logger, MainContext context)
     {
         _logger = logger;
+        _context = context;
+    }
+
+    // Helper method to get the current authenticated user
+    private User GetCurrentUser()
+    {
+        string username = User.Identity?.Name ?? string.Empty;
+        return UserQuery.GetUserByUsername(username) ?? new();
     }
 
     public IActionResult Dashboard(int page = 1)
     {
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
+        var user = GetCurrentUser();
         
-        // Find the user by username using our query pattern
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
-
         // Get the total count of articles for this author
         int totalItems = ArticleQuery.GetArticleCountByAuthor(user.Id);
         
@@ -82,13 +83,7 @@ public class AuthorController : Controller
             return View(model);
         }
 
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var user = GetCurrentUser();
 
         // Create the article and pass the author's user ID
         Article article = ArticleQuery.CreateArticle(model, user.Id);
@@ -102,13 +97,7 @@ public class AuthorController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var user = GetCurrentUser();
 
         // Get the article
         var article = ArticleQuery.GetArticleById(id);
@@ -146,13 +135,7 @@ public class AuthorController : Controller
             return View(model);
         }
 
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var user = GetCurrentUser();
 
         // Get the article
         var article = ArticleQuery.GetArticleById(model.Id);
@@ -179,13 +162,7 @@ public class AuthorController : Controller
 
     public IActionResult Details(int id)
     {
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var user = GetCurrentUser();
 
         // Get the article
         var article = ArticleQuery.GetArticleById(id);
@@ -214,13 +191,7 @@ public class AuthorController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Cancel(int id, int page = 1)
     {
-        // Get the current user's username
-        string username = User.Identity?.Name ?? string.Empty;
-        var user = UserQuery.GetUserByUsername(username);
-        if (user == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        var user = GetCurrentUser();
 
         // Get the article
         var article = ArticleQuery.GetArticleById(id);
