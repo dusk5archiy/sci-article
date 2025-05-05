@@ -100,7 +100,7 @@ public static class ArticleQuery
 
     public static List<Article> GetArticlesByStatus(string status, int page, int pageSize)
     {
-        List<Article> articles = new();
+        List<Article> articles = [];
 
         Query q = new(Tbl.Article);
         if (status != "All")
@@ -158,6 +158,7 @@ public static class ArticleQuery
         q.OutputQuery(approvedQ.SelectQuery(), "[ApprovedCount]");
         q.OutputQuery(pendingQ.SelectQuery(), "[PendingCount]");
         q.OutputQuery(rejectedQ.SelectQuery(), "[RejectedCount]");
+        q.WhereClause($"({countQ.SelectQuery()}) > 0");
         q.Offset(page, pageSize);
 
         switch (sortBy)
@@ -188,16 +189,17 @@ public static class ArticleQuery
 
             authorStats.Add(authorStat);
         }));
-
         return authorStats;
     }
 
     public static int GetAuthorWithArticlesCount()
     {
         int count = 0;
-        Query q = new(Tbl.Article);
-        q.OutputClause($"DISTINCT {Field.Article__AuthorId}");
-        q.GroupBy(Field.Article__AuthorId);
+        Query q = new(Tbl.User);
+        Query q2 = new(Tbl.Article);
+        q2.WhereField(Field.Article__AuthorId, Field.User__Id);
+        q2.Output(QPiece.countAll);
+        q.WhereClause($"({q2.SelectQuery()}) > 0");
         QDatabase.Exec(conn => count = q.Count(conn));
         return count;
     }
@@ -268,19 +270,13 @@ public static class ArticleQuery
     public static int GetTopicCount()
     {
         int count = 0;
-        List<string> topics = new();
+        List<string> topics = [];
 
         void func(SqlConnection conn)
         {
             Query q = new(Tbl.Article);
             q.Output($"DISTINCT {Field.Article__Topic}");
-            q.Select(conn, reader =>
-            {
-                if (!reader.IsDBNull(0))
-                {
-                    topics.Add(reader.GetString(0));
-                }
-            });
+            q.Select(conn, reader => topics.Add(reader.GetString(0)));
 
             count = topics.Count;
         }
@@ -292,9 +288,7 @@ public static class ArticleQuery
     public static int GetTotalArticleCount()
     {
         int count = 0;
-
         Query q = new(Tbl.Article);
-        q.Output(QPiece.countAll);
         QDatabase.Exec(conn => count = q.Count(conn));
         return count;
     }

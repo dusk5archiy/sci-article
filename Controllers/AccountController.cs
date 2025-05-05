@@ -17,6 +17,12 @@ public class AccountController : Controller
     {
     }
 
+    public IActionResult AccessDenied(string returnUrl = null!)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
+
     [HttpGet]
     public IActionResult Login(string returnUrl = null!)
     {
