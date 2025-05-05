@@ -37,7 +37,7 @@ public class AccountController : Controller
         var user = UserQuery.GetUserByUsername(model.Username);
         if (user == null || !PasswordHasher.VerifyPassword(model.Password, user.Password))
         {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            ModelState.AddModelError(string.Empty, "Đăng nhập không thành công");
             return View(model);
         }
 

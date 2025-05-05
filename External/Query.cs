@@ -352,8 +352,12 @@ class Query
     // ------------------------------------------------------------------------
     public T Scalar<T>(SqlConnection conn)
     {
-        SqlCommand command = new SqlCommand(SelectQuery(), conn);
-        return (T)command.ExecuteScalar();
+        string query = SelectQuery();
+        SqlCommand command = new (query, conn);
+        Console.WriteLine($"[START] query: {command.CommandText}");
+        var result =  (T)command.ExecuteScalar();
+        Console.WriteLine($"[FINISH] query");
+        return result;
     }
 
     public int Scalar(SqlConnection conn)

@@ -89,7 +89,7 @@ sealed class QDatabase
         int counter = ++query_counter;
         Console.WriteLine($"[START] query #{counter}: {query}");
         Stopwatch stopwatch = Stopwatch.StartNew();
-        using (SqlCommand command = new SqlCommand(query, conn))
+        using (SqlCommand command = new (query, conn))
         {
             using (SqlDataReader reader = command.ExecuteReader())
             {

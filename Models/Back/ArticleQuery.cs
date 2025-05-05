@@ -43,8 +43,6 @@ public static class ArticleQuery
     {
         Query q = new(Tbl.Article);
         q.Where(Field.Article__Id, form.Id);
-
-        // Set the updated fields
         q.SetNString(Field.Article__Title, form.Title);
         q.SetNString(Field.Article__Abstract, form.Abstract);
         q.SetNString(Field.Article__Content, form.Content);
@@ -198,7 +196,8 @@ public static class ArticleQuery
     {
         int count = 0;
         Query q = new(Tbl.Article);
-        q.Output($"DISTINCT {Field.Article__AuthorId}");
+        q.OutputClause($"DISTINCT {Field.Article__AuthorId}");
+        q.GroupBy(Field.Article__AuthorId);
         QDatabase.Exec(conn => count = q.Count(conn));
         return count;
     }
