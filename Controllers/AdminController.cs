@@ -14,7 +14,7 @@ public class AdminController : Controller
 {
     private const int ItemsPerPage = 10;
 
-    private User? GetCurrentAdmin()
+    private User? GetCurrentUser()
     {
         string username = User.Identity?.Name ?? string.Empty;
         return UserQuery.GetUserByUsername(username);
@@ -28,7 +28,7 @@ public class AdminController : Controller
 
         var viewModel = new AdminDashboardViewModel
         {
-            AdminName = GetCurrentAdmin()?.Name ?? "Admin",
+            AdminName = GetCurrentUser()?.Name ?? "Admin",
             Articles = articleViewModels,
             StatusFilter = statusFilter,
             Pagination = new()
@@ -115,7 +115,7 @@ public class AdminController : Controller
         
         var viewModel = new AuthorStatisticsViewModel
         {
-            AdminName = GetCurrentAdmin()?.Name ?? "Admin",
+            AdminName = GetCurrentUser()?.Name ?? "Admin",
             TotalArticles = totalArticles,
             ApprovedArticles = approvedArticles,
             PendingArticles = pendingArticles,
@@ -127,7 +127,7 @@ public class AdminController : Controller
             TopicSortOrder = topicSortOrder
         };
 
-        if (view == "authors" || view == "both")
+        if (view == "authors")
         {
             page = Math.Max(1, page);
             int totalAuthors = ArticleQuery.GetAuthorWithArticlesCount();
@@ -141,7 +141,7 @@ public class AdminController : Controller
             };
         }
 
-        if (view == "topics" || view == "both")
+        if (view == "topics")
         {
             topicPage = Math.Max(1, topicPage);
             int totalTopics = ArticleQuery.GetTopicCount();

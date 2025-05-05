@@ -23,7 +23,7 @@ public static class UserQuery
                 Birthday = form.Birthday,
                 Role = UserRole.Author // Ensure this is always an Author role
             };
-            q.Insert(conn, string.Join(", ", user.ToList()));
+            q.Insert(conn, user.ToString());
         }
         );
         return user;

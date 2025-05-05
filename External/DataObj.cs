@@ -16,6 +16,11 @@ public abstract class DataObj
     {
         return [];
     }
+    
+    public override string ToString()
+    {
+        return string.Join(", ", ToList());
+    }
 
     // ========================================================================
 }

@@ -38,8 +38,4 @@ public class User : DataObj
         ];
         return fields;
     }
-    public override string ToString()
-    {
-        return string.Join(", ", ToList());
-    }
 }

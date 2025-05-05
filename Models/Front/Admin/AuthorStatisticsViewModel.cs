@@ -17,7 +17,7 @@ public class AuthorStatisticsViewModel
     // Statistics by Topic
     public List<TopicArticleCountViewModel> TopicArticleCounts { get; set; } = [];
     public PaginationInfo TopicPagination { get; set; } = new PaginationInfo();
-    public string CurrentView { get; set; } = "authors"; // Can be "authors" or "topics"
+    public string CurrentView { get; set; } = "authors"; // "authors", "topics"
     
     // Sorting properties for authors
     public string SortBy { get; set; } = "ArticleCount";

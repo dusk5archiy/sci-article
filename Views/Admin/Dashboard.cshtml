@@ -5,8 +5,31 @@
     ViewData["Title"] = "Bảng điều khiển quản trị";
 }
 
+@functions {
+    public string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            ArticleStatus.Pending => "bg-warning text-dark",
+            ArticleStatus.Approved => "bg-success",
+            ArticleStatus.Rejected => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+    
+    public string GetStatusText(string status)
+    {
+        return status switch
+        {
+            ArticleStatus.Pending => "Đang chờ",
+            ArticleStatus.Approved => "Đã duyệt",
+            ArticleStatus.Rejected => "Từ chối",
+            _ => "Không xác định"
+        };
+    }
+}
+
 <div class="container my-4">
-    <!-- Display success or error messages if they exist -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -150,27 +173,3 @@
         </div>
     }
 </div>
-
-@functions {
-    public string GetStatusClass(string status)
-    {
-        return status switch
-        {
-            ArticleStatus.Pending => "bg-warning text-dark",
-            ArticleStatus.Approved => "bg-success",
-            ArticleStatus.Rejected => "bg-danger",
-            _ => "bg-secondary"
-        };
-    }
-    
-    public string GetStatusText(string status)
-    {
-        return status switch
-        {
-            ArticleStatus.Pending => "Đang chờ",
-            ArticleStatus.Approved => "Đã duyệt",
-            ArticleStatus.Rejected => "Từ chối",
-            _ => "Không xác định"
-        };
-    }
-}

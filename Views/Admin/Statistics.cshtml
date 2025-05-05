@@ -1,8 +1,9 @@
 @model SciArticle.Models.Front.Admin.AuthorStatisticsViewModel
 @{
     ViewData["Title"] = "Thống kê";
-    
-    // Helper function to determine the appropriate sort icon
+}
+
+@functions {
     string GetSortIcon(string columnName, string currentSortBy, string currentSortOrder)
     {
         if (columnName == currentSortBy)
@@ -11,15 +12,13 @@
         }
         return "bi-filter";
     }
-    
-    // Helper function to determine the next sort order
     string GetNextSortOrder(string columnName, string currentSortBy, string currentSortOrder)
     {
         if (columnName == currentSortBy)
         {
             return currentSortOrder == "asc" ? "desc" : "asc";
         }
-        return "asc"; // Default to ascending when switching columns
+        return "desc";
     }
 }
 
@@ -27,7 +26,6 @@
     <h1>Thống kê bài báo</h1>
     <p class="lead">Xin chào, @Model.AdminName. Đây là thống kê bài báo trong hệ thống.</p>
 
-    <!-- Summary statistics by article status -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-light">
@@ -63,10 +61,9 @@
         </div>
     </div>
 
-    <!-- Navigation tabs -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="nav-link @(Model.CurrentView == "authors" || Model.CurrentView == "both" ? "active" : "")" 
+            <a class="nav-link @(Model.CurrentView == "authors" ? "active" : "")" 
                asp-controller="Admin" asp-action="Statistics" asp-route-view="authors">
                 Thống kê theo tác giả
             </a>
@@ -79,8 +76,7 @@
         </li>
     </ul>
 
-    <!-- Authors statistics -->
-    @if (Model.CurrentView == "authors" || Model.CurrentView == "both")
+    @if (Model.CurrentView == "authors")
     {
         <div class="card mb-4">
             <div class="card-header">
@@ -323,8 +319,7 @@
         </div>
     }
 
-    <!-- Topics statistics -->
-    @if (Model.CurrentView == "topics" || Model.CurrentView == "both")
+    @if (Model.CurrentView == "topics")
     {
         <div class="card">
             <div class="card-header">

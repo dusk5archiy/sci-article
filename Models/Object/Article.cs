@@ -45,8 +45,4 @@ public class Article : DataObj
         ];
         return fields;
     }
-    public override string ToString()
-    {
-        return string.Join(", ", ToList());
-    }
 }

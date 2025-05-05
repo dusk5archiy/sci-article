@@ -33,7 +33,7 @@ public static class ArticleQuery
                 Status = ArticleStatus.Pending
             };
             Query q = new(Tbl.Article);
-            q.Insert(conn, string.Join(", ", article.ToList()));
+            q.Insert(conn, article.ToString());
         }
         );
         return article;
