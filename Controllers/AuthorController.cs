@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SciArticle.Models.Front.User;
 using SciArticle.Models.Back;
+using SciArticle.Models.Front.User;
 using SciArticle.Models.Object;
 
 namespace SciArticle.Controllers;
@@ -10,6 +10,7 @@ namespace SciArticle.Controllers;
 public class AuthorController : Controller
 {
     private const int ItemsPerPage = 10;
+
     private User GetCurrentUser()
     {
         string username = User.Identity?.Name ?? string.Empty;
@@ -20,10 +21,14 @@ public class AuthorController : Controller
     {
         var user = GetCurrentUser();
         int totalItems = ArticleQuery.GetArticleCountByAuthor(user.Id);
-        page = Math.Max(1, page); 
-        
-        var articleViewModels = ArticleQuery.GetArticlesForAuthorDashboard(user.Id, page, ItemsPerPage);
-        
+        page = Math.Max(1, page);
+
+        var articleViewModels = ArticleQuery.GetArticlesForAuthorDashboard(
+            user.Id,
+            page,
+            ItemsPerPage
+        );
+
         var viewModel = new AuthorDashboardViewModel
         {
             AuthorName = user.Name,
@@ -32,8 +37,8 @@ public class AuthorController : Controller
             {
                 CurrentPage = page,
                 ItemsPerPage = ItemsPerPage,
-                TotalItems = totalItems
-            }
+                TotalItems = totalItems,
+            },
         };
 
         return View(viewModel);
@@ -66,7 +71,7 @@ public class AuthorController : Controller
         var article = ArticleQuery.GetArticleById(id);
         if (article == null || article.AuthorId != user.Id)
         {
-            return NotFound();
+            return Redirect("~/Account/AccessDenied");
         }
         if (article.Status != ArticleStatus.Pending)
         {
@@ -79,7 +84,7 @@ public class AuthorController : Controller
             Title = article.Title,
             Abstract = article.Abstract,
             Content = article.Content,
-            Topic = article.Topic
+            Topic = article.Topic,
         };
 
         return View(viewModel);
@@ -97,7 +102,7 @@ public class AuthorController : Controller
         var article = ArticleQuery.GetArticleById(model.Id);
         if (article == null || article.AuthorId != user.Id)
         {
-            return NotFound();
+            return Redirect("~/Account/AccessDenied");
         }
         if (article.Status != ArticleStatus.Pending)
         {
@@ -114,7 +119,7 @@ public class AuthorController : Controller
         var article = ArticleQuery.GetArticleById(id);
         if (article == null || article.AuthorId != user.Id)
         {
-            return NotFound();
+            return Redirect("~/Account/AccessDenied");
         }
         var viewModel = new ArticleDetailViewModel
         {
@@ -125,7 +130,7 @@ public class AuthorController : Controller
             Topic = article.Topic,
             TimeStamp = article.TimeStamp,
             Status = article.Status,
-            CanEdit = article.Status == ArticleStatus.Pending
+            CanEdit = article.Status == ArticleStatus.Pending,
         };
 
         return View(viewModel);
@@ -140,7 +145,7 @@ public class AuthorController : Controller
         var article = ArticleQuery.GetArticleById(id);
         if (article == null || article.AuthorId != user.Id)
         {
-            return NotFound();
+            return Redirect("~/Account/AccessDenied");
         }
 
         if (article.Status != ArticleStatus.Pending)
@@ -151,10 +156,10 @@ public class AuthorController : Controller
 
         ArticleQuery.CancelArticle(article.Id);
         TempData["SuccessMessage"] = "Bài báo của bạn đã được hủy thành công.";
-        
+
         int totalArticles = ArticleQuery.GetArticleCountByAuthor(user.Id);
         int totalPages = (int)Math.Ceiling((double)totalArticles / ItemsPerPage);
-        
+
         if (page > totalPages && totalPages > 0)
         {
             page = totalPages;
@@ -163,7 +168,8 @@ public class AuthorController : Controller
         {
             page = 1;
         }
-        
+
         return RedirectToAction(nameof(Dashboard), new { page });
     }
 }
+

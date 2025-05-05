@@ -22,7 +22,11 @@ public class AdminController : Controller
     {
         page = Math.Max(1, page);
         int totalItems = ArticleQuery.GetArticleCountByStatus(statusFilter);
-        var articleViewModels = ArticleQuery.GetArticlesForAdminDashboard(statusFilter, page, ItemsPerPage);
+        var articleViewModels = ArticleQuery.GetArticlesForAdminDashboard(
+            statusFilter,
+            page,
+            ItemsPerPage
+        );
 
         var viewModel = new AdminDashboardViewModel
         {
@@ -33,8 +37,8 @@ public class AdminController : Controller
             {
                 CurrentPage = page,
                 ItemsPerPage = ItemsPerPage,
-                TotalItems = totalItems
-            }
+                TotalItems = totalItems,
+            },
         };
 
         return View(viewModel);
@@ -49,7 +53,7 @@ public class AdminController : Controller
         {
             return NotFound();
         }
-        
+
         ArticleQuery.ApproveArticle(id);
         TempData["SuccessMessage"] = "Bài báo đã được phê duyệt thành công.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
@@ -64,7 +68,7 @@ public class AdminController : Controller
         {
             return NotFound();
         }
-        
+
         ArticleQuery.RejectArticle(id);
         TempData["SuccessMessage"] = "Bài báo đã bị từ chối.";
         return RedirectToAction(nameof(Dashboard), new { page, statusFilter });
@@ -77,7 +81,7 @@ public class AdminController : Controller
         {
             return NotFound();
         }
-        
+
         var author = UserQuery.GetUserById(article.AuthorId);
         var viewModel = new AdminArticleDetailsViewModel
         {
@@ -91,7 +95,7 @@ public class AdminController : Controller
             Topic = article.Topic,
             Status = article.Status,
             Page = page,
-            StatusFilter = statusFilter
+            StatusFilter = statusFilter,
         };
 
         return View(viewModel);
@@ -104,13 +108,14 @@ public class AdminController : Controller
         string sortBy = "ArticleCount",
         string sortOrder = "desc",
         string topicSortBy = "ArticleCount",
-        string topicSortOrder = "desc")
+        string topicSortOrder = "desc"
+    )
     {
         int totalArticles = ArticleQuery.GetTotalArticleCount();
         int approvedArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Approved);
         int pendingArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Pending);
         int rejectedArticles = ArticleQuery.GetArticleCountByStatusType(ArticleStatus.Rejected);
-        
+
         var viewModel = new AuthorStatisticsViewModel
         {
             AdminName = GetCurrentUser()?.Name ?? "Admin",
@@ -122,20 +127,25 @@ public class AdminController : Controller
             SortBy = sortBy,
             SortOrder = sortOrder,
             TopicSortBy = topicSortBy,
-            TopicSortOrder = topicSortOrder
+            TopicSortOrder = topicSortOrder,
         };
 
         if (view == "authors")
         {
             page = Math.Max(1, page);
             int totalAuthors = ArticleQuery.GetAuthorWithArticlesCount();
-            var authorStats = ArticleQuery.GetAuthorArticleStatistics(page, ItemsPerPage, sortBy, sortOrder);
+            var authorStats = ArticleQuery.GetAuthorArticleStatistics(
+                page,
+                ItemsPerPage,
+                sortBy,
+                sortOrder
+            );
             viewModel.AuthorArticleCounts = authorStats;
             viewModel.Pagination = new PaginationInfo
             {
                 CurrentPage = page,
                 ItemsPerPage = ItemsPerPage,
-                TotalItems = totalAuthors
+                TotalItems = totalAuthors,
             };
         }
 
@@ -143,17 +153,21 @@ public class AdminController : Controller
         {
             topicPage = Math.Max(1, topicPage);
             int totalTopics = ArticleQuery.GetTopicCount();
-            var topicStats = ArticleQuery.GetTopicArticleStatistics(topicPage, ItemsPerPage, topicSortBy, topicSortOrder);
+            var topicStats = ArticleQuery.GetTopicArticleStatistics(
+                topicPage,
+                ItemsPerPage,
+                topicSortBy,
+                topicSortOrder
+            );
             viewModel.TopicArticleCounts = topicStats;
             viewModel.TopicPagination = new PaginationInfo
             {
                 CurrentPage = topicPage,
                 ItemsPerPage = ItemsPerPage,
-                TotalItems = totalTopics
+                TotalItems = totalTopics,
             };
         }
 
         return View(viewModel);
     }
 }
-
