@@ -1,11 +1,11 @@
 using Microsoft.Data.SqlClient;
-using System.Threading.Tasks;
 
 class JoinQuery
 {
     readonly string table;
     readonly string? alias_;
     readonly List<string> joins = [];
+
     public JoinQuery(string table, string? alias_ = null)
     {
         this.table = QPiece.tableAlias(table, alias_);
@@ -246,7 +246,12 @@ class Query
         );
     }
 
-    public void LeftJoin(string field_1, string field_2, string? alias_1 = null, string? alias_2 = null)
+    public void LeftJoin(
+        string field_1,
+        string field_2,
+        string? alias_1 = null,
+        string? alias_2 = null
+    )
     {
         string table_1 = field_1.Split('.')[0].Trim('[').Trim(']');
         JoinClause(
@@ -310,7 +315,7 @@ class Query
         {
             query += $" FROM {table}";
         }
-        query += GetJoinClause() ;
+        query += GetJoinClause();
         query += GetWhereClause();
         query += GetGroupByClause();
         query += GetOrderClause();
@@ -353,9 +358,9 @@ class Query
     public T Scalar<T>(SqlConnection conn)
     {
         string query = SelectQuery();
-        SqlCommand command = new (query, conn);
+        SqlCommand command = new(query, conn);
         Console.WriteLine($"[START] query: {command.CommandText}");
-        var result =  (T)command.ExecuteScalar();
+        var result = (T)command.ExecuteScalar();
         Console.WriteLine($"[FINISH] query");
         return result;
     }
@@ -365,7 +370,8 @@ class Query
         return Scalar<int>(conn);
     }
 
-    public int Count(SqlConnection conn){
+    public int Count(SqlConnection conn)
+    {
         Output(QPiece.countAll);
         return Scalar(conn);
     }

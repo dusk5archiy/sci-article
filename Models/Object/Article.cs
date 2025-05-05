@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.Data.SqlClient;
 
 namespace SciArticle.Models.Object;
@@ -9,6 +8,7 @@ class ArticleStatus
     public const string Approved = "Approved";
     public const string Rejected = "Rejected";
 }
+
 public class Article : DataObj
 {
     public int Id { get; set; }
@@ -32,8 +32,11 @@ public class Article : DataObj
         Topic = QDataReader.getStr(reader, ref pos);
         Status = QDataReader.getStr(reader, ref pos);
     }
-    public override List<string> ToList() {
-        List<string> fields = [
+
+    public override List<string> ToList()
+    {
+        List<string> fields =
+        [
             QPiece.toStr(Id),
             QPiece.toNStr(Title),
             QPiece.toStr(AuthorId),
@@ -41,8 +44,9 @@ public class Article : DataObj
             QPiece.toNStr(Abstract),
             QPiece.toNStr(Content),
             QPiece.toNStr(Topic),
-            QPiece.toStr(Status)
+            QPiece.toStr(Status),
         ];
         return fields;
     }
 }
+

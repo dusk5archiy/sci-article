@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace SciArticle.Models.Front.User;
 
 public class PaginationInfo
@@ -16,3 +14,4 @@ public class AuthorDashboardViewModel
     public List<AuthorArticleViewModel> Articles { get; set; } = new List<AuthorArticleViewModel>();
     public PaginationInfo Pagination { get; set; } = new PaginationInfo();
 }
+

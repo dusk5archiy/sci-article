@@ -1,21 +1,18 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SciArticle.Models;
+using SciArticle.Models.Back;
 using SciArticle.Models.Front.User;
 using SciArticle.Models.Object;
 using SciArticle.Models.Utilities;
-using SciArticle.Models.Back;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SciArticle.Controllers;
 
 public class AccountController : Controller
 {
-    public AccountController()
-    {
-    }
+    public AccountController() { }
 
     public IActionResult AccessDenied(string returnUrl = null!)
     {
@@ -49,24 +46,27 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new (ClaimTypes.Name, user.Username),
-            new (ClaimTypes.Email, user.Email),
-            new (ClaimTypes.Role, user.Role)
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role),
         };
 
         var claimsIdentity = new ClaimsIdentity(
-            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
         var authProperties = new AuthenticationProperties
         {
             IsPersistent = model.RememberMe,
-            RedirectUri = returnUrl
+            RedirectUri = returnUrl,
         };
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),
-            authProperties);
+            authProperties
+        );
 
         if (user.Role == UserRole.Author)
         {
@@ -118,18 +118,22 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new (ClaimTypes.Name, user.Username),
-            new (ClaimTypes.Email, user.Email),
-            new (ClaimTypes.Role, user.Role)
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role),
         };
 
         var claimsIdentity = new ClaimsIdentity(
-            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity));
+            new ClaimsPrincipal(claimsIdentity)
+        );
 
         return RedirectToAction("Dashboard", "Author");
     }
 }
+
